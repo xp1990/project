@@ -1,0 +1,160 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+ \geometry{margin=0.5in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+\usepackage{graphicx} % support the \includegraphics command and options
+% \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+\usepackage{times}
+% These packages are all incorporated in the memoir class to one degree or another...
+%\usepackage{biblatex} 
+%\bibliography{Essay}
+
+\usepackage{listings}
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{A Comparison and Analysis of Multithreading Language and Library Implementations and Features with Respect to Conway's Game of Life\\Final Year Project}
+\author{Edward Michniak 10233252}
+\date{} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+\maketitle
+\tableofcontents
+\pagebreak
+\section{Abstract}
+\section{Introduction}
+\section{Life}
+\begin{itemize}
+\item The game at a glance
+\subitem Define a start state
+\subitem Begin automata etc...
+\item What makes it so interesting?
+\item Why code?
+\subitem "The sheer number of different implementations of this game make it an extremely interesting case study, some languages may be better for one model than an another, an implementation may be possible in one language but not in another!(due to the available features)"
+\end{itemize}
+\section{Threads}
+\begin{itemize}
+\item Von Neumann architecture
+\subitem Von Neumann bottleneck?
+\item Harvard Architecture
+\subitem differences? Bottlnecks?
+\item Sequential vs. Threaded
+\item Common issues: Consumer-Producer, Cooperation, Race condition, dead lock, live lock.
+\item System kernel? How this effects the handling of threads.
+\item Introduction to packages/languages that will be used.
+\subitem Briefly explain the differences, look (very quickly) at some syntax.
+\item more needs to be here!
+\end{itemize}
+\section{Languages, Compilers, and Interpreters}
+\begin{itemize}
+\item Introduce the languages more formally.
+\subitem Is history necessary here? Java history is quite interesting. 
+\subitem C99 not supported in windows. Worth mentioning?
+\subitem Language type (Functional, procedural/imperative, OO)
+\subitem Language features (typing, inheritance, classes, shared objects, evaluation, verbosity)
+\item Explain the difference between a compiler and an interpreter (don't forget JIT). 
+\subitem Maybe do this during the language introduction? 
+\subitem Highlight which language uses which.
+\subitem Mention optimisation, take a quick look at some of the C features that offer this (even the deprecated ones: register etc...)
+\subitem how do interpreters handle optimisation?
+\subitem how can they ever keep up with compiled languages?
+\item Recommendations based on research
+\subitem Is there one language that offers everything?
+\subitem Could a desirable feature be made available to another language/library at little cost?
+\end{itemize}
+\section{Implementation}
+\begin{itemize}
+\item Challenges and appropriateness for implementation
+\subitem How the programming paradigm (proc, oop, functional){\bf affects the life implementation?} Mainly mention limitations here! (In haskell we can do X, but in C we can do Y blah blah...) Mention typing, inheritance, evaluation, verbosity, classes, shared objects...etc...
+\subitem Memory structures? (quad tree, sequential bits, OOP, struct linked list)
+\subitem Processing methods (sequential, threaded, more threads, less threads, thread communication?)
+\subitem FOR ALL OF THESE MENTION LIMITATIONS AND BENEFITS!
+\item Pseudo-Code (both sequential and threaded)
+\item UML (both sequential and threaded)
+\subitem state diagram showing generation processes
+\subitem class diagram for OOP models
+\subitem SEQUENCE diagram!! Useful for showing method calls and generation order. Couple with state Diagram
+\item Validation technique
+\subitem Functional model (Possible haskell, lisp, clojure, ML, Maybe even SaC?!?)
+\subitem Original seed grid
+\item Program variables!
+\subitem How will this effect runtime performance?
+\subsection{C with OpenMP}
+The aim in all of these sections is to show an understanding and indepth explanation of the code and it's semantics. 
+\subsection{C with PThreads}
+\subsection{C++ with Boost}
+\subsection{Java with Threads}
+\subsection{Pyhton with Threads}
+\subsection{C with CUDA}
+\section{Analysis}
+\subsection{Syntax and Semantics}
+\subsection{Ease of use}
+\subsection{Features}
+\subsection{Performance}
+\section{Conclusion}
+Some sort of choice based on the most appropriate language.
+\section{Appendices}
+All the code!! With comments
+\end{itemize}
+\end{document}

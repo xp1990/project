@@ -1,0 +1,224 @@
+import java.util.*;
+import java.io.*;
+import java.lang.*;
+
+class LifeThread extends Thread
+{
+	private final int tid, start, stop, DIM;
+	private Grid g1;
+    private int x, y;
+
+	public LifeThread(int t, int st, int sp, Grid g, int D)
+	{
+		tid = t;
+
+		start = st;
+		stop = sp;
+
+		DIM = D;
+
+		g1 = g;
+	}
+
+	public void run()
+	{
+        try
+        {
+            processChunk();      
+        }
+        catch(Exception e)
+        {
+            System.out.println("Exception: " + e.toString() + " Thread: " + tid + " at: " + x + "," + y);
+        }
+	}
+
+    private void processChunk()
+    {
+        for(x = start; x <= stop; x++)
+        {
+            for(y = 1; y <= DIM; y++)
+            {
+                int count = g1.getCell(x-1,y-1) + g1.getCell(x-1,y) + g1.getCell(x-1, y+1) +
+                                        g1.getCell(x,y-1) + g1.getCell(x,y+1) +
+                                        g1.getCell(x+1,y-1) + g1.getCell(x+1,y) + g1.getCell(x+1,y+1);
+
+                if(count == 3 || (count == 2 && g1.getCell(x, y) == 1))
+                {
+                    g1.setCell(x, y, 1);                    
+                }
+                else if(count < 2 || count > 3)
+                {
+                    g1.setCell(x, y, 0);
+                }
+            }
+        }
+    }
+    
+	public int getTid()
+	{
+		return tid;
+	}
+}
+
+class Grid
+{
+	private final int DIM, LIFE;
+
+	private int[][] grid, new_grid;
+
+    private Random r1;
+    
+
+	public Grid(int D, int L)
+	{
+		DIM = D;
+		LIFE = L;
+
+		grid = new int[DIM+2][DIM+2];
+		new_grid = new int[DIM+2][DIM+2];
+
+        r1 = new Random(2012);
+        
+		fillArrayRand();
+		copyGhostCells();
+		printGrid();
+
+	}
+
+	public void finishGen()
+	{
+        //note for loop just as fast as system.arraycopy, clone and copyOf
+        
+        for(int x = 0; x < DIM+2; x++)
+        {
+            for(int y = 0; y < DIM+2; y++)
+            {
+                grid[x][y] = new_grid[x][y];
+            }
+        }
+        
+        copyGhostCells();
+	}
+
+	public void printGrid()
+	{
+		int cellCount = 0;
+		int aliveCount = 0;
+
+		for(int x = 1; x <= DIM; x++)
+		{
+			for(int y = 1; y <= DIM; y++)
+			{
+				if(getCell(x,y) == 1)
+					aliveCount++;
+
+				cellCount++;
+				//System.out.print(getCell(x,y));
+			}
+			//System.out.print("\n");
+		}
+
+		System.out.println("Cells: " + cellCount);
+		System.out.println("Alive: " + aliveCount);
+	}
+
+	public int getCell(int x, int y)
+	{
+		return grid[x][y];
+	}
+
+	public void setCell(int x, int y, int val)
+	{
+		new_grid[x][y] = val;
+	}
+
+	private void fillArrayRand()
+    {
+        for(int x = 1; x <= DIM; x++)
+        {
+          for(int y = 1; y <= DIM; y++)
+          {
+                
+                if (r1.nextInt(LIFE) == 1)
+                    grid[x][y] = 1;
+                else
+                    grid[x][y] = 0;
+          }
+        }
+    }
+
+	public void copyGhostCells()
+	{
+
+		/*copy ghost columns to grid*/
+		for(int x = 1; x <= DIM; x++)
+		{
+			grid[x][DIM+1] = grid[x][1];
+			grid[x][0] = grid[x][DIM];
+		}
+
+		/*copy ghost rows to grid*/
+		for(int y = 0; y <= DIM+1; y++)
+		{
+			grid[0][y] = grid[DIM][y];
+			grid[DIM+1][y] = grid[1][y];
+		}
+	}
+
+
+}
+
+public class GoL
+{
+
+    private static final int THREADS = 2, DIM = 512, LIFE = 3, GEN = 10000;
+
+    public static void main(String args[])
+    {
+		Grid g1 = new Grid(DIM, LIFE);
+        Stopwatch stopwatch = new Stopwatch();
+		Vector<LifeThread> life_vec = new Vector<LifeThread>();
+
+        try
+        {
+        
+            stopwatch.start();
+            for(int gen = 0; gen < GEN; gen++)
+            {
+                for(int x = 0; x < THREADS; x++)
+                {
+                    int start = ((DIM / THREADS) * x) + 1;
+                    int stop = (DIM / THREADS) + start - 1;
+
+                    LifeThread life = new LifeThread(x, start, stop, g1, DIM);
+
+                    life_vec.add(x, life);
+                }
+
+                for(int x = 0; x < THREADS; x++)
+                {
+                    life_vec.get(x).start();
+                    
+                    //System.out.println("Thread: " + life_vec.get(x).getTid() + " at " + gen);
+                    
+                }   
+
+                for(int x = 0; x < THREADS; x++)
+                    life_vec.get(x).join();
+                    
+                g1.finishGen();
+            }
+            stopwatch.stop();
+            
+            g1.printGrid();
+            System.out.println("Time: " + stopwatch);
+        }
+        catch(Exception e)
+        {
+            System.out.println("Exception: " + e);
+        }
+        
+    }
+}
+
+

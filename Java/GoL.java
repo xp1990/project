@@ -1,6 +1,7 @@
 import java.util.*;
 import java.io.*;
 import java.lang.*;
+import java.nio.charset.Charset;
 
 class LifeThread extends Thread
 {
@@ -64,22 +65,26 @@ class Grid
 {
 	private final int DIM, LIFE;
 
+    private final String FILENAME;
+
 	private int[][] grid, new_grid;
 
     private Random r1;
     
 
-	public Grid(int D, int L)
+	public Grid(int D, int L, String F)
 	{
 		DIM = D;
 		LIFE = L;
+        FILENAME = F;
 
 		grid = new int[DIM+2][DIM+2];
 		new_grid = new int[DIM+2][DIM+2];
 
         r1 = new Random(2012);
         
-		fillArrayRand();
+		//fillArrayRand();
+        readFileIn(FILENAME);
 		copyGhostCells();
 		printGrid();
 
@@ -165,17 +170,54 @@ class Grid
 		}
 	}
 
+    private void readFileIn(String filename)
+    {
+        int x = 1, y = 1, r;
+        
+        try
+        {
+            Charset encoding = Charset.defaultCharset();
+            File file = new File(filename);
+            InputStream in = new FileInputStream(file);
+            Reader reader = new InputStreamReader(in, encoding);
+            Reader buffer = new BufferedReader(reader);
+            while((r = buffer.read()) != -1) //similar to reading line in C
+            {
+                if((char)r == '1')
+                {
+                    grid[x][y] = 1;
+                    y++;
+                }
+                else if((char)r == '0')
+                {
+                    grid[x][y] = 0;
+                    y++;
+                }
+                else if(r == 10)
+                {
+                    x++;
+                    y = 1;
+                }
+            }
+        }
+        catch(Exception e)
+        {
+            System.out.println(e);
+        }
+    }
 
 }
 
 public class GoL
 {
 
-    private static final int THREADS = 2, DIM = 512, LIFE = 3, GEN = 10000;
+    private static final int THREADS = 2, DIM = 8, LIFE = 3, GEN = 2;
+
+    private static final String FILENAME = "8.dat";
 
     public static void main(String args[])
     {
-		Grid g1 = new Grid(DIM, LIFE);
+		Grid g1 = new Grid(DIM, LIFE, FILENAME);
         Stopwatch stopwatch = new Stopwatch();
 		Vector<LifeThread> life_vec = new Vector<LifeThread>();
 
@@ -205,8 +247,9 @@ public class GoL
 
                 for(int x = 0; x < THREADS; x++)
                     life_vec.get(x).join();
-                    
-                g1.finishGen();
+                
+                if(gen != 0) //Why?? No one knows!
+                    g1.finishGen();
             }
             stopwatch.stop();
             

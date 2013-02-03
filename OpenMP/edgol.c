@@ -5,14 +5,15 @@
 #include <unistd.h>
 #include <math.h>
 
-#define MAXGEN 10000
-#define DIM 512
+#define MAXGEN 2
+#define DIM 8
 #define LIFE 3
 #define SEED 2012
 #define THREADS 2
 #define SHARED 1
 #define INLINE 1
 #define REGISTER 0
+#define FILENAME "8.dat"
 
 #if REGISTER == 1
 register int** grid;
@@ -23,10 +24,13 @@ int** new_grid;
 #endif
 
 struct timespec begin, end;
+int cell_count, life_count;
 
 unsigned int nthreads;
 
 void print_grid(int**);
+void read_file(char*, int**);
+void fill_rand(int**);
 
 #if INLINE == 1
 inline void process(int**, int**, int, int, int);
@@ -49,7 +53,7 @@ main (int argc, char *argv[])
   double time_spent;
 
   /*main game vars*/
-  int i, j, gen, cell_count, life_count;
+  int i, j, gen;
 
   /*in c a 2d grid is an array of pointers to pointers of ints
    *here we allocate enough space for our temp transfer grid and
@@ -67,37 +71,13 @@ main (int argc, char *argv[])
   grid_ptr = grid;
   new_grid_ptr = new_grid;
 
-  /*random seed for life generation
-   *incorporate time as a variable for more
-   *randomness
-   */
-  srand(SEED);
-
-  cell_count = 0;
-  life_count = 0;
-
-  for(i=1; i <=DIM; i++)
-  {
-    for(j=1; j <=DIM; j++)
-    {
-      /*
-       *uses the LIFE var as a probability of life existing in
-       *the initial grid.
-       */
-      if(rand() % LIFE == 1)
-      {
-          life_count++;
-          grid_ptr[i][j] = 1;
-      }
-      else
-      {
-          grid_ptr[i][j] = 0;
-      }
-      cell_count++;  
-    }
-  }
+  //fill_rand(grid_ptr);
+  
+  read_file(FILENAME, grid_ptr);
 
   printf("\nCells: %d\nAlive: %d\n", cell_count, life_count);
+
+    print_grid(grid_ptr);
 
   /*private OMP vars*/
   int start, stop, tid;
@@ -153,7 +133,7 @@ main (int argc, char *argv[])
 
       #pragma omp barrier
 
-      if(gen != 0 && tid == 0)
+      if(gen != 0 && tid == 0) //why?
       {
         temp_ptr = grid_ptr;
         grid_ptr = new_grid_ptr;
@@ -236,7 +216,7 @@ main (int argc, char *argv[])
 
       #pragma omp barrier
 
-      if(gen != 0 && tid == 0)
+      if(gen != 0 && tid == 0) //why != 0?!?
       {
         temp_ptr = grid_ptr;
         grid_ptr = new_grid_ptr;
@@ -249,10 +229,12 @@ main (int argc, char *argv[])
 
 #endif
 
-  //end = clock();
   clock_gettime(CLOCK_MONOTONIC, &end);
   time_spent = (end.tv_sec - begin.tv_sec);
   time_spent = time_spent + (end.tv_nsec - begin.tv_nsec) / 1000000000.0;
+
+  print_grid(grid_ptr);
+  printf("\nCells: %d\nAlive: %d\n", cell_count, life_count);
 
   printf("\nTime taken with %d threads is: %f\n", nthreads, time_spent);
 
@@ -261,19 +243,62 @@ main (int argc, char *argv[])
 }
 
 void
+fill_rand(int** grid_ptr)
+{
+    int i, j;
+
+   /*random seed for life generation
+   *incorporate time as a variable for more
+   *randomness
+   */
+    srand(SEED);
+
+    cell_count = 0;
+    life_count = 0;
+
+    for(i=1; i <=DIM; i++)
+    {
+        for(j=1; j <=DIM; j++)
+        {
+            /*
+            *uses the LIFE var as a probability of life existing in
+            *the initial grid.
+            */
+            if(rand() % LIFE == 1)
+            {
+                life_count++;
+                grid_ptr[i][j] = 1;
+            }
+            else
+            {
+                grid_ptr[i][j] = 0;
+            }
+            cell_count++;  
+        }
+    }
+}
+
+void
 print_grid(int** g)
 {
   int i,j;
+
+    cell_count = 0;
+    life_count = 0;
 
   for(i=1; i <= DIM; i++)
   {
     for(j=1; j <= DIM; j++)
     {
-      printf("%d", g[i][j]);
+        if(g[i][j] == 1)
+            life_count++;
+        
+        cell_count++;
+        //printf("%d", g[i][j]);
     }
-    printf("\n");
+  //printf("\n");
   }
-    printf("\n");
+  printf("\n");
 
 }
 
@@ -330,4 +355,44 @@ priv_memcpy(int start, int stop, int** priv_grid, int** grid_ptr)
       priv_grid[x][y] = grid_ptr[x][y];
     }
   }
+}
+
+void read_file(char * name, int** grid)
+{
+    FILE *fp;
+    int c, x = 1, y = 1;
+
+    cell_count = 0;
+    life_count = 0;
+
+    fp = fopen(name,"r");
+    if(fp == NULL)
+    {
+        printf("File open failed.\n");
+        exit(0);
+    }
+
+    while((c = fgetc(fp)) != EOF)
+    {
+        if(c == 48)
+        {
+            grid[x][y] = 0;
+            cell_count++;
+            y++;    
+        }
+        else if(c == 49)
+        {
+            grid[x][y] = 1;
+            life_count++;
+            cell_count++;
+            y++;
+        }
+        else if(c = 10)
+        {
+            x++;
+            y = 1;
+        }
+    }
+
+    fclose(fp);
 }

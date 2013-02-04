@@ -5,15 +5,15 @@
 #include <unistd.h>
 #include <math.h>
 
-#define MAXGEN 2
-#define DIM 8
+#define MAXGEN 1000
+#define DIM 512
 #define LIFE 3
 #define SEED 2012
 #define THREADS 2
 #define SHARED 1
 #define INLINE 1
 #define REGISTER 0
-#define FILENAME "8.dat"
+#define FILENAME "512.dat"
 
 #if REGISTER == 1
 register int** grid;
@@ -71,13 +71,11 @@ main (int argc, char *argv[])
   grid_ptr = grid;
   new_grid_ptr = new_grid;
 
+  /*used if user wants to fill grid using rand*/
   //fill_rand(grid_ptr);
   
+
   read_file(FILENAME, grid_ptr);
-
-  printf("\nCells: %d\nAlive: %d\n", cell_count, life_count);
-
-    print_grid(grid_ptr);
 
   /*private OMP vars*/
   int start, stop, tid;
@@ -138,8 +136,6 @@ main (int argc, char *argv[])
         temp_ptr = grid_ptr;
         grid_ptr = new_grid_ptr;
         new_grid_ptr = temp_ptr;
-
-        //print_grid(grid_ptr);
       }
     }
   }//end of omp
@@ -298,7 +294,6 @@ print_grid(int** g)
     }
   //printf("\n");
   }
-  printf("\n");
 
 }
 
@@ -325,9 +320,12 @@ process(int** grid_ptr, int** new_grid_ptr, int start, int stop, int tid)
               grid_ptr[i][j-1] + grid_ptr[i][j+1] +
               grid_ptr[i+1][j-1] + grid_ptr[i+1][j] + grid_ptr[i+1][j+1];
 
-      if(count == 3 || (count == 2 && grid[i][j] == 1))
+      //printf("%d",count);
+
+      if(count == 3 || (count == 2 && grid_ptr[i][j] == 1))
       {
         new_grid_ptr[i][j] = 1;
+
         //printf("Thread %d creating life at %d,%d\n", tid, i, j);
       }
       else if(count < 2 || count > 3)
@@ -335,7 +333,12 @@ process(int** grid_ptr, int** new_grid_ptr, int start, int stop, int tid)
         new_grid_ptr[i][j] = 0;
         //printf("Thread %d: destroying life at %d,%d\n", tid, i, j);
       }
+      else if(count == 2)
+      {
+        new_grid_ptr[i][j] = grid_ptr[i][j];
+      }
     }
+    //printf("\n");
   }
 }
 

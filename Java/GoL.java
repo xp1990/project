@@ -86,7 +86,7 @@ class Grid
 		//fillArrayRand();
         readFileIn(FILENAME);
 		copyGhostCells();
-		printGrid();
+		//printGrid();
 
 	}
 
@@ -103,6 +103,7 @@ class Grid
         }
         
         copyGhostCells();
+        //printGrid();
 	}
 
 	public void printGrid()
@@ -211,9 +212,9 @@ class Grid
 public class GoL
 {
 
-    private static final int THREADS = 2, DIM = 8, LIFE = 3, GEN = 2;
+    private static final int THREADS = 2, DIM = 512, LIFE = 3, GEN = 1000;
 
-    private static final String FILENAME = "8.dat";
+    private static final String FILENAME = "512.dat";
 
     public static void main(String args[])
     {

@@ -212,9 +212,9 @@ class Grid
 public class GoL
 {
 
-    private static final int THREADS = 2, DIM = 512, LIFE = 3, GEN = 1000;
+    private static final int THREADS = 16, DIM = 2048, LIFE = 3, GEN = 1000;
 
-    private static final String FILENAME = "512.dat";
+    private static final String FILENAME = "2048.dat";
 
     public static void main(String args[])
     {

@@ -1,0 +1,27 @@
+Generate or Read in file to represent array initial state
+    allocate memory for grid
+    read/write into grid
+
+define the amount of work for threads to do
+
+create threads and begin iteration
+    
+    1 Thread 
+    copy ghost cells
+
+    join    
+
+    process grid
+        count cells neighbours by reading from grid
+        apply rules to count
+        write result to new_grid
+
+    join
+
+    1 thread
+    copy new grid to current grid
+    
+repeat
+
+count cells and write alive cells to screen in final state.
+

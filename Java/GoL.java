@@ -51,6 +51,10 @@ class LifeThread extends Thread
                 {
                     g1.setCell(x, y, 0);
                 }
+                else if(count == 2)
+                {
+                    g1.setCell(x, y, g1.getCell(x, y));
+                }
             }
         }
     }
@@ -103,7 +107,7 @@ class Grid
         }
         
         copyGhostCells();
-        //printGrid();
+        printGrid();
 	}
 
 	public void printGrid()
@@ -124,7 +128,7 @@ class Grid
 			//System.out.print("\n");
 		}
 
-		System.out.println("Cells: " + cellCount);
+		//System.out.println("Cells: " + cellCount);
 		System.out.println("Alive: " + aliveCount);
 	}
 
@@ -212,9 +216,9 @@ class Grid
 public class GoL
 {
 
-    private static final int THREADS = 16, DIM = 2048, LIFE = 3, GEN = 1000;
+    private static final int THREADS = 4, DIM = 512, LIFE = 3, GEN = 100;
 
-    private static final String FILENAME = "2048.dat";
+    private static final String FILENAME = "512.dat";
 
     public static void main(String args[])
     {
@@ -251,10 +255,11 @@ public class GoL
                 
                 if(gen != 0) //Why?? No one knows!
                     g1.finishGen();
+                
             }
             stopwatch.stop();
             
-            g1.printGrid();
+            //g1.printGrid();
             System.out.println("Time: " + stopwatch);
         }
         catch(Exception e)

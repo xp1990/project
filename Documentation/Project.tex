@@ -94,6 +94,16 @@
 \item Why code?
 \subitem "The sheer number of different implementations of this game make it an extremely interesting case study, some languages may be better for one model than an another, an implementation may be possible in one language but not in another!(due to the available features)"
 \end{itemize}
+\subsection{Prototype and Experimental Research}
+\begin{itemize}
+\item Sequential C code?
+\subitem Mention results
+\item Defining parallel points in execution 
+\subitem Reference parallel programming book
+\item Building the abstract pseudo-algorithm for sequential execution
+\item Requirements elicitation? (It has to go somewhere!)
+\subitem Functional and non-functional requirements of language
+\end{itemize}
 \subsection{Threads}
 \begin{itemize}
 \item Von Neumann architecture
@@ -102,13 +112,18 @@
 \subitem differences? Bottlnecks?
 \item Sequential vs. Threaded
 \item Common issues: Consumer-Producer, Cooperation, Race condition, dead lock, live lock.
+\item What would happen if we didn't have the synchronisation directives in the code?
 \item System kernel? How this effects the handling of threads.
 \item Introduction to packages/languages that will be used.
 \subitem Briefly explain the differences, look (very quickly) at some syntax.
+\item sleep why is this bad?
+\item thread states. ready. executing. dead. etc... HOW THE SYSTEM HANDLES THEM!
+\subitem how does (generically) a language interface with a systems threads?
 \item more needs to be here!
 \end{itemize}
 \section{Languages, Compilers, and Interpreters}
 \begin{itemize}
+\item Interesting point: TeX the package used to create documents is a form of compilation.
 \item Introduce the languages more formally.
 \subitem Is history necessary here? Java history is quite interesting. 
 \subitem C99 not supported in windows. Worth mentioning?
@@ -158,34 +173,55 @@
 \subitem parallel
 \subitem for (how could this change the code??)
 \subitem ordered
+\item POI!! Implementing different library directives changes the results drastically.... Why?! Look into trace thread? correction...Linux Trace Tool Kit
 \item Does it conform to the abstract routine?
-\item shared memory versus private memory implementation. Problems? Results? Terribleness! Include code. 
+\item shared memory versus private memory implementation. Problems? Results? Terribleness! Include code. EVIDENCE!!
 \end{itemize} 
 
-OpenMP is an ``API specification for parallel programming'' 
+OpenMP is an ``API specification for parallel programming'' ... \cite{ref3}
 
 \subsection{C with PThreads}
 \subsection{C++ with Boost}
 \subsection{Java with Threads}
 \begin{itemize}
 \item gcj and javac
-\item fork, join, yield
+\item fork, join, yield, sleep
 \item Overheads? Thread creation - compare to C
-\item OOP
+\item OOP? Threads as an object?
 \end{itemize}
 \subsection{Pyhton}
 \begin{itemize}
 \item List comprehension
 \item Parallel processing?
+\item parallel applications of Map, Reduce, and List Comprehension? Can it be done? Reference Parallel Computing: Architectures, Algorithms, and Applications, C. Bischof et al (Eds.) P203 Implementing Data-Parallel Patterns for Shared Memory with OpenMP GOOD ARTICLE!
+\item The other paradigm? Fetching a 3x3 block of cells. Processing them, return the result... 
 \end{itemize}
 \subsection{C with CUDA}
 \section{Analysis}
+\subsection{Problems}
+\begin{itemize}
+\item Should this really be here? It should really be rounded up in each subheading...
+\item Optimisations compiler results mess up
+\item Functional model learning curve and paradigm shift. 
+\item Python - Using functional techniques.
+\end{itemize}
 \subsection{Syntax and Semantics}
 \subsection{Ease of use}
 \subsection{Features}
 \subsection{Performance}
+\subsection{Extensions}
+\begin{itemize}
+\item Using OOP to recognize patterns and predict movement. I.e. Gliders and inverters.
+\end{itemize}
 \section{Conclusion}
 Some sort of choice based on the most appropriate language.
+\section{Bibliography and References}
+\nocite{ref1}
+\nocite{ref2}
+\nocite{ref4}
+\nocite{ref5}
+\bibliographystyle{unsrt}
+\bibliography{Project.bib}
 \section{Appendices}
 All the code!! With comments
 \end{itemize}

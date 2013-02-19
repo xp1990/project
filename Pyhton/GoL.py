@@ -45,13 +45,14 @@ def copyGhostCells(x):
         x[dim + 1][i] = x[1][i]
     return x
 
-def count(i, j):
+def count(x, i, j):
+    #It would be super cool if I could return a lambda function here!!
     return (x[i - 1][j - 1] + x[i - 1][j] + x[i - 1][j + 1]
      + x[i][j - 1] + x[i][j + 1] + x[i + 1][j - 1] +
      x[i + 1][j] + x[i + 1][j + 1])
 
 def countGrid(x):
-    return [[count(i, j) for j in range(1, len(x[1]) - 1)] for i in range(1, len(x) - 1)]
+    return [[count(x, i, j) for j in range(1, len(x[1]) - 1)] for i in range(1, len(x) - 1)]
     #return [[1 for j in range(1, len(x[1]) - 1)] for i in range(1, len(x) - 1) if rules(count(i, j)) == 1]
 
 def change(count_grid, x, i, j):
@@ -80,9 +81,9 @@ def outputFile(gen):
             w.write(" " + str(new_grid[i][j]))
         w.write("\n")
 
-dim = 2048
+dim = 512
 x = initGrid()
-x = readFile(x, "2048.dat")
+x = readFile(x, "512.dat")
 print("Read file complete")
 #pprint.pprint(x)
 

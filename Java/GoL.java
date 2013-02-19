@@ -216,7 +216,7 @@ class Grid
 public class GoL
 {
 
-    private static final int THREADS = 4, DIM = 512, LIFE = 3, GEN = 100;
+    private static final int THREADS = 4, DIM = 512, LIFE = 3, GEN = 10;
 
     private static final String FILENAME = "512.dat";
 

@@ -46,6 +46,7 @@ def copyGhostCells(x):
 
 
 def count(x, i, j):
+    #It would be super cool if I could return a lambda function here!!
     return (x[i - 1][j - 1] + x[i - 1][j] + x[i - 1][j + 1]
      + x[i][j - 1] + x[i][j + 1] + x[i + 1][j - 1] +
      x[i + 1][j] + x[i + 1][j + 1])
@@ -54,7 +55,6 @@ def count(x, i, j):
 def countGrid(x):
     return [[count(x, i, j) for j in range(1, len(x[1]) - 1)]
     for i in range(1, len(x) - 1)]
-
 
 def change(count_grid, x, i, j):
     if i > 0 and i < dim + 1 and j > 0 and j < dim + 1:

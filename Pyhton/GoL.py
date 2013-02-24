@@ -8,12 +8,10 @@ streams"""
 
 """None of the functions have side effects (beside conway(), which does
 printing), as emphasized by the functional programming style. Also, no function
-depends on some global state - hence they are all deterministic. This means that
-those functions always return the same output when called with a specific input.
-They are a mapping of input to output"""
+depends on some global state - hence they are all deterministic. This means
+that those functions always return the same output when called with a specific
+input. They are a mapping of input to output"""
 
-import pprint
-import pickle
 
 def initGrid():
     #list comprehension
@@ -34,9 +32,10 @@ def readFile(grid, filename):
         y = 1
     return grid
 
+
+def copyGhostCells(x):
 #POI: range gives a reading which is inclusive of the first argument but
 #exclusive of the second argument!!
-def copyGhostCells(x):
     for j in range(1, dim + 1):
         x[j][dim + 1] = x[j][1]
         x[j][0] = x[j][dim]
@@ -45,18 +44,22 @@ def copyGhostCells(x):
         x[dim + 1][i] = x[1][i]
     return x
 
-def count(i, j):
+
+def count(x, i, j):
     return (x[i - 1][j - 1] + x[i - 1][j] + x[i - 1][j + 1]
      + x[i][j - 1] + x[i][j + 1] + x[i + 1][j - 1] +
      x[i + 1][j] + x[i + 1][j + 1])
 
+
 def countGrid(x):
-    return [[count(i, j) for j in range(1, len(x[1]) - 1)] for i in range(1, len(x) - 1)]
-    #return [[1 for j in range(1, len(x[1]) - 1)] for i in range(1, len(x) - 1) if rules(count(i, j)) == 1]
+    return [[count(x, i, j) for j in range(1, len(x[1]) - 1)]
+    for i in range(1, len(x) - 1)]
+
 
 def change(count_grid, x, i, j):
     if i > 0 and i < dim + 1 and j > 0 and j < dim + 1:
-        if count_grid[i - 1][j - 1] == 3 or (count_grid[i - 1][j - 1] == 2 and x[i][j] == 1):
+        if count_grid[i - 1][j - 1] == 3 or (count_grid[i - 1][j - 1] == 2 and
+        x[i][j] == 1):
             return 1
         elif count_grid[i - 1][j - 1] < 2 or count_grid[i - 1][j - 1] > 3:
             return 0
@@ -67,33 +70,72 @@ def change(count_grid, x, i, j):
 
 
 def evolve(count_grid, x):
-    return [[(change(count_grid, x, i, j)) for j in range(dim + 2)] for i in range(dim + 2)]
+    return [[(change(count_grid, x, i, j)) for j in range(dim + 2)]
+    for i in range(dim + 2)]
+
 
 def sumlist(L):
-    return sum(map(sum,L))
+    return sum(map(sum, L))
+
 
 def outputFile(gen):
     w = open("gen%i.ppm" % gen, 'w')
     w.write("P1\n%i\n%i\n" % (dim, dim))
-    for i in range(1, dim):
-        for j in range(1, dim):
-            w.write(" " + str(new_grid[i][j]))
+    for i in range(1, dim + 1):
+        for j in range(1, dim + 1):
+            w.write(str(new_grid[i][j]) + " ")
         w.write("\n")
 
-dim = 2048
-x = initGrid()
-x = readFile(x, "2048.dat")
-print("Read file complete")
-#pprint.pprint(x)
 
-for gen in range(10):
+def updateGUI(grid):
+    screen.fill((0, 0, 0))
+    j = 0
+    i = 0
+    while j <= SCREEN_Y:
+        while i <= SCREEN_X:
+            if (grid[j / 4][i / 4] == 1):
+                #square.fill((255, 255, 255))
+                pygame.draw.circle(screen, arr[random.randint(0,2)], (i, j), 2)
+            else:
+                square.fill((0, 0, 0))
+            #draw_me = pygame.Rect((j), (i), 1, 1)
+            #screen.blit(square, draw_me)
+            i = i + 4
+        j = j + 4
+        i = 0
+    pygame.display.flip()
+
+dim = 192
+x = initGrid()
+x = readFile(x, "192.dat")
+print("Read file complete")
+
+#GUI stuff
+import pygame, random
+from pygame.locals import *
+
+arr=[]
+RED=(255,10,10)
+BLU=(10,255,10)
+GRN=(10,10,255)
+arr.append(RED)
+arr.append(BLU)
+arr.append(GRN)
+
+SCREEN_X = 4 * dim
+SCREEN_Y = 4 * dim
+screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
+square = pygame.Surface((4, 4))
+
+for gen in range(10000):
     x = copyGhostCells(x)
     count_grid = countGrid(x)
-    new_grid = evolve(count_grid, x)    
+    new_grid = evolve(count_grid, x)
     if gen != 0:
         x = new_grid
-    print(gen, "complete", sumlist(new_grid))
-    outputFile(gen)
+    #print(gen, "complete", sumlist(new_grid))
+    updateGUI(new_grid)
+    #outputFile(gen)
 
 print(gen, sumlist(new_grid))
- 
+

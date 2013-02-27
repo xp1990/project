@@ -25,11 +25,17 @@
 \usepackage{array} % for better arrays (eg matrices) in maths
 \usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
 \usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
-\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+%\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
 \usepackage{times}
 % These packages are all incorporated in the memoir class to one degree or another...
 %\usepackage{biblatex} 
 %\bibliography{Essay}
+\usepackage{mdframed}
+\usepackage{fixltx2e}
+\usepackage{hyperref}
+%pictures and figures
+\usepackage{caption}
+\usepackage{subcaption}
 
 \usepackage{listings}
 \usepackage{color}
@@ -90,13 +96,54 @@
 \item The game at a glance
 \subitem Define a start state
 \subitem Begin automata etc...
+\subitem Moore-neighbourhood
 \item What makes it so interesting?
 \item Why code?
 \subitem "The sheer number of different implementations of this game make it an extremely interesting case study, some languages may be better for one model than an another, an implementation may be possible in one language but not in another!(due to the available features)"
-
-Conway's Game of Life is an example of a cellular automaton(CA). This is described by \cite[Lesser, Wuensche, 1992 p6]{ref6} as a ``discrete dynamical system which evolves by the iteration of a simple deterministic rule''. Considered by many to be a \emph{zero-player game} Conway's automaton was first revealed in a 1970 scientific american article.\cite[Gardner]{ref7} I will be introducing a few terms throughout my report I aim to define and explain them here...
-
 \end{itemize}
+
+Conway's Game of Life is an example of a {\bf cellular automaton} (CA). This is described by \cite[Lesser, Wuensche, 1992 p6]{ref6} as a ``discrete dynamical system which evolves by the iteration of a simple deterministic rule''. When considering constructing a CA there are a few steps one has to follow:
+\begin{itemize}
+\item Firstly, consider that \emph{time is discrete} and progresses in steps, in this report I will mostly be referring to them as {\bf generations}. A term far more fitting for Conway's Game of Life. 
+\item Secondly, an \emph{n-dimensional space} is divided and sectioned into {\bf cells}. This space will have a boundary condition associated with it. I will be implementing the space with an orthogonal toroidal array in 2-dimensions. This means that my boundary conditions would be {\bf cyclic} rather than {\bf absorbing}.
+\begin{mdframed}
+{\bf Extension Note:} However interesting and challenging it may be to implement the Game of Life in 3-D space it is not the focus of this project and for the sake of thread scheduling, clarity, and correctness of the result, 2-dimensions is safer and more predictable.
+\end{mdframed}
+\item Thirdly, each cell has an {\bf attribute} from a limited set of attributes. In the case of Conway's Game of Life, each individual cell can either be dead or alive. Represented in most of my implementations by a 1 or 0. The combined values of all cells in the space are considered to represent the {\bf global state}.
+\item Finally, to progress to the next time interval (for instance, to progress from t\textsubscript{0} to t\textsubscript{1}) a {\bf transitional function} is applied to each individual cell using its attribute and the attributes of its {\bf neighbourhood}. Such that, t\textsubscript{1} is the state of the automaton after having the function applied at state t\textsubscript{0}. In this context the Game of Life uses a \emph{Moore-neighbourhood} which consists of the 8 cells surrounding a central cell. However it is worth to note the existence of the \emph{Von Neumann neighbourhood} which pre-dates Moore's implementation.
+\end{itemize}
+
+\begin{figure}[h]
+        \centering
+        \begin{subfigure}[h]{0.3\textwidth}
+                \centering
+                \includegraphics[scale=1]{cyclic}
+                \caption{Cyclic boundaries}
+                \label{fig:cyclic}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[h]{0.3\textwidth}
+                \centering
+                \includegraphics[scale=1]{absorbing}
+                \caption{Absorbing boundaries}
+                \label{fig:absorb}
+        \end{subfigure}
+        \caption{Types of boundaries}\label{fig:boundaries}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.75]{neighbourhood}
+\caption{The two types of CA neighbourhood}
+\label{fig:neighbourhood}
+\end{figure}
+
+
+Considered by many to be a \emph{zero-player game}, Conway's automaton was first revealed in a 1970 Scientific American article \cite[Gardner]{ref7} where his rules where enumerated and an explanation of how one might play his game was offered. This involved a very laborious method of using a checker board and two-colour checkers (or something similar), to represent the {\bf global state}. An 8 x 8 grid would require 64 applications of the transitional function to move forward just one generation! Maybe you can begin to see why a computational implementation would be useful? 
+
+I will be introducing a few terms throughout my report I aim to define and explain them here...
+
 \subsection{Prototype and Experimental Research}
 \begin{itemize}
 \item Sequential C code?

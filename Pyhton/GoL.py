@@ -105,9 +105,9 @@ def updateGUI(grid):
         i = 0
     pygame.display.flip()
 
-dim = 192
+dim = 256
 x = initGrid()
-x = readFile(x, "192.dat")
+x = readFile(x, "256.dat")
 print("Read file complete")
 
 #GUI stuff

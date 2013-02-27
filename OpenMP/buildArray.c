@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DIM 2048
+#define DIM 256
 #define LIFE 3
-#define NAME "2048.dat"
+#define NAME "256.dat"
 
 int main()
 {

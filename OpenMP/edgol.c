@@ -6,14 +6,14 @@
 #include <math.h>
 
 #define MAXGEN 1000
-#define DIM 2048
+#define DIM 512
 #define LIFE 3
 #define SEED 2012
-#define THREADS 2
+#define THREADS 512
 #define SHARED 1
 #define INLINE 1
 #define REGISTER 0
-#define FILENAME "2048.dat"
+#define FILENAME "512.dat"
 
 #if REGISTER == 1
 register int **grid;
@@ -77,6 +77,9 @@ int main(int argc, char *argv[])
 
 	/*private OMP vars */
 	int start, stop, tid;
+
+	print_grid(grid_ptr);
+	printf("\nCells: %d\nAlive: %d\n", cell_count, life_count);
 
 	/*begin timing */
 	clock_gettime(CLOCK_MONOTONIC, &begin);
@@ -183,12 +186,14 @@ int main(int argc, char *argv[])
         **/
 
 				/*copy ghost columns to grid */
-				for (i = 1; i <= DIM; i++) {
+				for (i = 1; i <= DIM; i++) 
+                {
 					grid_ptr[i][DIM + 1] = grid_ptr[i][1];
 					grid_ptr[i][0] = grid_ptr[i][DIM];
 				}
 				/*copy ghost rows to grid */
-				for (j = 0; j <= DIM + 1; j++) {
+				for (j = 0; j <= DIM + 1; j++)
+                {
 					grid_ptr[0][j] = grid_ptr[DIM][j];
 					grid_ptr[DIM + 1][j] = grid_ptr[1][j];
 				}

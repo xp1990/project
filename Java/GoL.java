@@ -107,7 +107,7 @@ class Grid
         }
         
         copyGhostCells();
-        printGrid();
+        //printGrid();
 	}
 
 	public void printGrid()
@@ -216,7 +216,7 @@ class Grid
 public class GoL
 {
 
-    private static final int THREADS = 4, DIM = 512, LIFE = 3, GEN = 10;
+    private static final int THREADS = 4, DIM = 2048, LIFE = 3, GEN = 1000;
 
     private static final String FILENAME = "512.dat";
 
@@ -259,7 +259,7 @@ public class GoL
             }
             stopwatch.stop();
             
-            //g1.printGrid();
+            g1.printGrid();
             System.out.println("Time: " + stopwatch);
         }
         catch(Exception e)

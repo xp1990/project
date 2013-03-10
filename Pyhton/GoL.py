@@ -79,6 +79,7 @@ def sumlist(L):
 
 
 def outputFile(gen):
+#outputs a .ppm file for given generation
     w = open("gen%i.ppm" % gen, 'w')
     w.write("P1\n%i\n%i\n" % (dim, dim))
     for i in range(1, dim + 1):
@@ -94,26 +95,25 @@ def updateGUI(grid):
     while j <= SCREEN_Y:
         while i <= SCREEN_X:
             if (grid[j / 4][i / 4] == 1):
-                #square.fill((255, 255, 255))
                 pygame.draw.circle(screen, arr[random.randint(0,2)], (i, j), 2)
             else:
-                square.fill((0, 0, 0))
-            #draw_me = pygame.Rect((j), (i), 1, 1)
-            #screen.blit(square, draw_me)
+                square.fill((0, 0, 0))     
             i = i + 4
         j = j + 4
         i = 0
     pygame.display.flip()
 
-dim = 256
+dim = 192
 x = initGrid()
-x = readFile(x, "256.dat")
+x = readFile(x, "192.dat")
 print("Read file complete")
 
 #GUI stuff
 import pygame, random
 from pygame.locals import *
 
+
+#array for colours
 arr=[]
 RED=(255,10,10)
 BLU=(10,255,10)
@@ -122,11 +122,15 @@ arr.append(RED)
 arr.append(BLU)
 arr.append(GRN)
 
+
+#screen dimensions
 SCREEN_X = 4 * dim
 SCREEN_Y = 4 * dim
 screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
 square = pygame.Surface((4, 4))
 
+
+#main game loop!
 for gen in range(10000):
     x = copyGhostCells(x)
     count_grid = countGrid(x)

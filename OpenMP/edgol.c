@@ -5,15 +5,16 @@
 #include <unistd.h>
 #include <math.h>
 
-#define MAXGEN 1000
-#define DIM 512
+#define MAXGEN 10000
+#define DIM 1024
 #define LIFE 3
+#define MALLOC 0
 #define SEED 2012
-#define THREADS 512
+#define THREADS 4 
 #define SHARED 1
 #define INLINE 1
 #define REGISTER 0
-#define FILENAME "512.dat"
+#define FILENAME "1024.dat"
 
 #if REGISTER == 1
 register int **grid;
@@ -57,14 +58,25 @@ int main(int argc, char *argv[])
 	 *here we allocate enough space for our temp transfer grid and
 	 *our original grid
 	 */
-	grid = (int **)malloc(sizeof(int *) * DIM + 2);
-	new_grid = (int **)malloc(sizeof(int *) * DIM + 2);
-	
-    for (i = 0; i < DIM + 2; i++)
-    {
-		grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
-		new_grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
-	}
+	#if MALLOC == 1
+		grid = (int **)malloc(sizeof(int *) * DIM + 2);
+		new_grid = (int **)malloc(sizeof(int *) * DIM + 2);
+		
+		for (i = 0; i < DIM + 2; i++)
+		{
+			grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
+			new_grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
+		}
+	#else
+		grid = (int **)calloc(DIM + 2, sizeof(int *));
+		new_grid = (int **)calloc(DIM + 2, sizeof(int *));
+		
+		for (i = 0; i < DIM + 2; i++)
+		{
+			grid[i] = (int *)calloc(DIM + 2, sizeof(int *));
+			new_grid[i] = (int *)calloc(DIM + 2, sizeof(int *));
+		}
+	#endif
 
 	/*assign arrays to pointers */
 	grid_ptr = grid;

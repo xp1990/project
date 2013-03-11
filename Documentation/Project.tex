@@ -42,15 +42,17 @@
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
-\lstset{frame=tb,
-  language=Python,
+\definecolor{lightpurple}{rgb}{0.8,0.8,1}
+\lstset{frame=single,
+  backgroundcolor=\color{lightpurple},
+  language=C,
   aboveskip=3mm,
   belowskip=3mm,
   showstringspaces=false,
   columns=flexible,
-  basicstyle={\small\ttfamily},
-  numbers=none,
-  numberstyle=\tiny\color{gray},
+  basicstyle={\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{black},
   keywordstyle=\color{blue},
   commentstyle=\color{dkgreen},
   stringstyle=\color{mauve},
@@ -156,7 +158,7 @@ These laws are going to form the basis of the {\bf transition function} which wi
 \begin{mdframed}
 {\bf Extension Note:} There is a vast number of different algorithms that could be implemented. For example, Hashlife, quad-trees, linked-list, bit-stream... An extension could be researched into the relative performance of different algorithms in specific languages and the language features which benefit or hinder execution. My pseudo-algorithm will be outlined later on however I will be focusing on realising and defining parallel points in the program execution and discussing the syntax, semantics and effectiveness for respective implementations. 
 \end{mdframed} 
-\subsection{Prototype and Experimental Research}
+\subsection{Prototype Code and Parallelism Research}
 %\begin{itemize}
 %\item refactoring the transitional function
 %\item Sequential C code?
@@ -167,9 +169,57 @@ These laws are going to form the basis of the {\bf transition function} which wi
 %\item Requirements elicitation? (It has to go somewhere!)
 %\subitem Functional and non-functional requirements of language
 
-A prototype sequential version of the Game of Life has been produced as part of my research into the algorithms available and memory structures I could have used. This version has been produced in C and can be broken down into a few abstract, yet simple, operations.
+A prototype sequential version of the Game of Life has been produced as part of my research into the algorithms available and memory structures I could have used. This version has been produced in C and can be broken down into a few abstract, yet simple, operations. This example is an illustration of one of the most basic of programming paradigms, {\bf sequential composition}. This is described by \cite[Chandry and Taylor, p68]{ref9} as when components are executed in order, one after the other. The composition terminates when the last component terminates. Considering components as individual sub-programs or functions in our C code. We can begin to see how the Game of Life may be executed sequentially. And quite slowly for that matter! Referencing {\it figure 4} we can see the {\bf sub-programs} or {\bf components} that make up the sequential algorithm for the Game of Life. I will talk about some of the more interesting and prominent snippets of code from this early implementation, however a full listing will be available, line-numbered and commented, in the appendices (PROVIDE DIRECTION!).\\
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{sequential0.png}
+\caption{A context-level activity diagram of the Game of Life algorithm}
+\label{fig: Algo0}
+\end{figure}
+\\This is the starting point for the entirety of the project. From this diagram I can get an overview of how one algorithm is different from another and construct new algorithms. By changing {\bf sub-programs}, by modifying {\bf program transitions}, and by delving deeper into {\bf components} and their constituents. The most important aspect of this diagram is going to be helping me realise and program the parallel regions of the automaton.
+\subsubsection{Refactoring the Components}
+%Explain code
+%Put other activity diagrams here!!
+{\it Figure 4} highlights that the first process in the Game of Life algorithm to take place is the allocating of memory for the array. Consistency across my code modules is paramount and {\bf DIM} references the chosen dimension of my game board. I need two identically sized blocks of memory to represent my two-dimensional grid. One for the current state, and one for the state of the next generation. As shown in {\it figure 4} at the end of an iteration of one generation the references to the grids are swapped, and the process repeats itself until {\bf MAXGEN} is reached. 
+\begin{mdframed}
+{\bf Knowledge Box:} The '\#' symbol denotes a preprocessor flag...
+\end{mdframed}
+\begin{lstlisting}
+#if USEBOOL == 0
+    #if MALLOC == 1      
+        grid = (int **)malloc(sizeof(int *) * DIM + 2);
+        new_grid = (int **)malloc(sizeof(int *) * DIM + 2);
+        
+        for (i = 0; i < DIM + 2; i++)
+        {
+            grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
+            new_grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
+        }            
+    #else        
+        grid = (int **)calloc(DIM + 2, sizeof(int *));
+        new_grid = (int **)calloc(DIM + 2, sizeof(int *));
+        
+        for (i = 0; i < DIM + 2; i++)
+        {
+            grid[i] = (int *)calloc(DIM + 2, sizeof(int *));
+            new_grid[i] = (int *)calloc(DIM + 2, sizeof(int *));
+        }            
+    #endif
+#else
+    grid = (bool **)calloc(DIM + 2, sizeof(bool *));
+    new_grid = (bool **)calloc(DIM + 2, sizeof(bool *));
+    
+    for (i = 0; i < DIM + 2; i++)
+    {
+        grid[i] = (bool *)calloc(DIM + 2, sizeof(bool *));
+        new_grid[i] = (bool *)calloc(DIM + 2, sizeof(bool *));
+    }
+#endif
+\end{lstlisting}
 
-%\end{itemize}
+\subsubsection{A Thought Process for Parallelism}
+
+Why do we make code parallel? So we can increase the speed at which a process or program can execute, of course! There are three main levels of parallelism: {\bf instruction-level parallelism}, {\bf data parallelism}, and {\bf task parallelism}. Where instruction-level parallelism represents instruction pipelining, or branch prediction \cite[Patterson, Hennessy, p41]{ref10}. Task parallelism is the concurrent processing of different tasks (or processes). Data parallelism, the beast that I am concerned with, is the decomposition of data into smaller blocks so that work can be carried out on them in parallel by separate processing units \cite[Patterson, Hennessy, A17]{ref10}.
 \subsection{Threads}
 \begin{itemize}
 \item Von Neumann architecture

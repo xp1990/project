@@ -3,33 +3,44 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define MAXGEN 1000
-#define DIM 512
+#define DIM 1024
 #define LIFE 3
 #define SEED 2012
+#define USEBOOL 1
+#define MALLOC 0
 
-struct node
-{
-    node * next;
-    bool val;
-};
-
-node * head = NULL;
-
-int **grid;
-int **new_grid;
+#if USEBOOL == 1
+    bool **grid;
+    bool **new_grid;
+#else
+    int **grid;
+    int **new_grid;
+#endif
 
 struct timespec begin, end;
 int cell_count, life_count;
 
-void print_grid(int **);
-void fill_rand(int **);
-void process(int **, int **);
+#if USEBOOL == 1
+    void print_grid(bool **);
+    void fill_rand(bool **);
+    void process(bool **, bool **);
+#else
+    void print_grid(int **);
+    void fill_rand(int **);
+    void process(int **, int **);
+#endif
+
 
 int main(int argc, char *argv[])
 {
-	int **grid_ptr, **new_grid_ptr, **temp_ptr;
+    #if USEBOOL == 1
+	bool **grid_ptr, **new_grid_ptr, **temp_ptr;
+    #else
+    int **grid_ptr, **new_grid_ptr, **temp_ptr;
+    #endif
 
 
 	/*vars for timing the main game loop */
@@ -42,15 +53,40 @@ int main(int argc, char *argv[])
 	 *here we allocate enough space for our temp transfer grid and
 	 *our original grid
 	 */
-	grid = (int **)malloc(sizeof(int *) * DIM + 2);
-	new_grid = (int **)malloc(sizeof(int *) * DIM + 2);
-	
-    for (i = 0; i < DIM + 2; i++)
-    {
-		grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
-		new_grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
-	}
-
+    #if USEBOOL == 0
+        #if MALLOC == 1
+        
+            grid = (int **)malloc(sizeof(int *) * DIM + 2);
+            new_grid = (int **)malloc(sizeof(int *) * DIM + 2);
+            
+            for (i = 0; i < DIM + 2; i++)
+            {
+                grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
+                new_grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
+            }
+            
+        #else
+        
+            grid = (int **)calloc(DIM + 2, sizeof(int *));
+            new_grid = (int **)calloc(DIM + 2, sizeof(int *));
+            
+            for (i = 0; i < DIM + 2; i++)
+            {
+                grid[i] = (int *)calloc(DIM + 2, sizeof(int *));
+                new_grid[i] = (int *)calloc(DIM + 2, sizeof(int *));
+            }
+            
+        #endif
+    #else
+        grid = (bool **)calloc(DIM + 2, sizeof(bool *));
+        new_grid = (bool **)calloc(DIM + 2, sizeof(bool *));
+        
+        for (i = 0; i < DIM + 2; i++)
+        {
+            grid[i] = (bool *)calloc(DIM + 2, sizeof(bool *));
+            new_grid[i] = (bool *)calloc(DIM + 2, sizeof(bool *));
+        }
+    #endif
 	/*assign arrays to pointers */
 	grid_ptr = grid;
 	new_grid_ptr = new_grid;
@@ -108,7 +144,11 @@ int main(int argc, char *argv[])
     return (0);
 }
 
+#if USEBOOL == 1
+void fill_rand(bool **grid_ptr)
+#else
 void fill_rand(int **grid_ptr)
+#endif
 {
 	int i, j;
 
@@ -138,7 +178,11 @@ void fill_rand(int **grid_ptr)
 	}
 }
 
+#if USEBOOL == 1
+void print_grid(bool **g)
+#else
 void print_grid(int **g)
+#endif
 {
 	int i, j;
 
@@ -158,9 +202,12 @@ void print_grid(int **g)
 
 }
 
+#if USEBOOL == 1
+void process(bool **grid_ptr, bool **new_grid_ptr)
+#else
 void process(int **grid_ptr, int **new_grid_ptr)
+#endif
 {
-
 	/*this can be made more efficient! produce two versions using compiler flags.
 	 *second version will break loop after a condition is met... 
 	 */

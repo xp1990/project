@@ -50,10 +50,11 @@
   belowskip=3mm,
   showstringspaces=false,
   columns=flexible,
-  basicstyle={\ttfamily},
+  basicstyle={\footnotesize\ttfamily},
   numbers=left,
   numberstyle=\tiny\color{black},
   keywordstyle=\color{blue},
+  morekeywords={endif,bool},
   commentstyle=\color{dkgreen},
   stringstyle=\color{mauve},
   breaklines=true,
@@ -109,7 +110,7 @@ Conway's Game of Life is an example of a {\bf cellular automaton} (CA). This is 
 \item Firstly, consider that \emph{time is discrete} and progresses in steps, in this report I will mostly be referring to them as {\bf generations}. A term far more fitting for Conway's Game of Life. 
 \item Secondly, an \emph{n-dimensional space} is divided and sectioned into {\bf cells}. This space will have a boundary condition associated with it. I will be implementing the space with an orthogonal toroidal array in 2-dimensions. This means that my boundary conditions would be {\bf cyclic} rather than {\bf absorbing}. {\it figure 1}
 \begin{mdframed}
-{\bf Extension Note:} However interesting and challenging it may be to implement the Game of Life in 3-D space it is not the focus of this project and for the sake of thread workload scheduling, clarity, and correctness of the result, 2-dimensions is safer and more predictable.
+{\bf Extension Box:} However interesting and challenging it may be to implement the Game of Life in 3-D space it is not the focus of this project and for the sake of thread workload scheduling, clarity, and correctness of the result, 2-dimensions is safer and more predictable.
 \end{mdframed}
 \item Thirdly, each cell has an {\bf attribute} from a limited set of attributes. In the case of Conway's Game of Life, each individual cell can either be dead or alive. Represented in most of my implementations by a 1 or 0. The combined values of all cells in the space are considered to represent the {\bf global state}.
 \item Finally, to progress to the next time interval (for instance, to progress from t\textsubscript{0} to t\textsubscript{1}) a {\bf transitional function} is applied to each individual cell using its attribute and the attributes of its {\bf neighbourhood}. Such that, t\textsubscript{1} is the state of the automaton after having the function applied at state t\textsubscript{0}. In this context the Game of Life uses a \emph{Moore-neighbourhood} which consists of the 8 cells surrounding a central cell. However it is worth to note the existence of the \emph{Von Neumann neighbourhood} which pre-dates Moore's implementation. {\it figure 2}
@@ -156,7 +157,7 @@ These laws are going to form the basis of the {\bf transition function} which wi
 \end{figure}
 \\Why code? Even smallest grid requires a lot of time and effort to move from one generation to the next. Consider the configuration in the grid above and try to process a single generation using a manual method. Boring, repetitive and tedious isn't it? Thankfully computers excel at boring and repetitive tasks that humans find tedious. Also, it's interesting! There's no end to the different implementations that could be written to change some way in which the system executes. Finally, the most common implementation of the Game of Life would involve the allocation of some array structure, and considering the layout of computer memory this is very intuitive and easy to do.\\
 \begin{mdframed}
-{\bf Extension Note:} There is a vast number of different algorithms that could be implemented. For example, Hashlife, quad-trees, linked-list, bit-stream... An extension could be researched into the relative performance of different algorithms in specific languages and the language features which benefit or hinder execution. My pseudo-algorithm will be outlined later on however I will be focusing on realising and defining parallel points in the program execution and discussing the syntax, semantics and effectiveness for respective implementations. 
+{\bf Extension Box:} There is a vast number of different algorithms that could be implemented. For example, Hashlife, quad-trees, linked-list, bit-stream... An extension could be researched into the relative performance of different algorithms in specific languages and the language features which benefit or hinder execution. My pseudo-algorithm will be outlined later on however I will be focusing on realising and defining parallel points in the program execution and discussing the syntax, semantics and effectiveness for respective implementations. 
 \end{mdframed} 
 \subsection{Prototype Code and Parallelism Research}
 %\begin{itemize}
@@ -169,7 +170,7 @@ These laws are going to form the basis of the {\bf transition function} which wi
 %\item Requirements elicitation? (It has to go somewhere!)
 %\subitem Functional and non-functional requirements of language
 
-A prototype sequential version of the Game of Life has been produced as part of my research into the algorithms available and memory structures I could have used. This version has been produced in C and can be broken down into a few abstract, yet simple, operations. This example is an illustration of one of the most basic of programming paradigms, {\bf sequential composition}. This is described by \cite[Chandry and Taylor, p68]{ref9} as when components are executed in order, one after the other. The composition terminates when the last component terminates. Considering components as individual sub-programs or functions in our C code. We can begin to see how the Game of Life may be executed sequentially. And quite slowly for that matter! Referencing {\it figure 4} we can see the {\bf sub-programs} or {\bf components} that make up the sequential algorithm for the Game of Life. I will talk about some of the more interesting and prominent snippets of code from this early implementation, however a full listing will be available, line-numbered and commented, in the appendices (PROVIDE DIRECTION!).\\
+A prototype sequential version of the Game of Life has been produced as part of my research into the algorithms available and memory structures I could have used. This version has been produced in C and can be broken down into a few abstract, yet simple, operations. This example is an illustration of one of the most basic of programming paradigms, {\bf sequential composition}. This is described by \cite[Chandry and Taylor, p68]{ref9} as when components are executed in order, one after the other. The composition terminates when the last component terminates. Considering components as individual sub-programs or functions in our C code. We can begin to see how the Game of Life may be executed sequentially. And quite slowly for that matter! Referencing {\it figure 4} we can see the {\bf sub-programs} or {\bf components} that make up the sequential algorithm for the Game of Life. I will talk about some of the more interesting and prominent snippets of code from this early implementation, however a full listing will be available, line-numbered and commented, in the appendix A.1.\\
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.5]{sequential0.png}
@@ -182,9 +183,9 @@ A prototype sequential version of the Game of Life has been produced as part of 
 %Put other activity diagrams here!!
 {\it Figure 4} highlights that the first process in the Game of Life algorithm to take place is the allocating of memory for the array. Consistency across my code modules is paramount and {\bf DIM} references the chosen dimension of my game board. I need two identically sized blocks of memory to represent my two-dimensional grid. One for the current state, and one for the state of the next generation. As shown in {\it figure 4} at the end of an iteration of one generation the references to the grids are swapped, and the process repeats itself until {\bf MAXGEN} is reached. 
 \begin{mdframed}
-{\bf Knowledge Box:} The '\#' symbol denotes a preprocessor flag...
+{\bf Knowledge Box:} The '{\bf \#}' symbol denotes a {\bf preprocessor macro}. I have used these extensively in my prototype code. It is a way of instructing the compiler, if certain conditions are met, which code to include or exclude from compilation. This is known as conditional compilation. It is especially useful, in the case highlighted below, when experimenting with different types as some blocks of code may stay the same however the prototypes or function declarations may change. Initially a {\bf macro} is defined at the top of the program and then tested in the main code block. This can be seen in appendix A.1 lines[12,13], lines[26-34], and lines[147-151].
 \end{mdframed}
-\begin{lstlisting}
+\begin{lstlisting}[language=C,caption={Array allocation using {\it malloc}, {\it calloc}, and {\it bool}}, morekeywords={malloc,calloc,bool}]
 #if USEBOOL == 0
     #if MALLOC == 1      
         grid = (int **)malloc(sizeof(int *) * DIM + 2);
@@ -216,10 +217,121 @@ A prototype sequential version of the Game of Life has been produced as part of 
     }
 #endif
 \end{lstlisting}
+In {\it listing 1} we begin to understand the plethora of options that are open to implementation in the considered context of {\bf array memory allocation} (We haven't even considered any of the other memory structures!). The general convention for all 3 blocks of code is the same, that we need to allocate a memory block for each of our pointers, {\it grid} and {\it new\_grid}, to address. The only things that change are the functions used for allocation, {\bf malloc} or {\bf calloc}, or the parameter passed to {\bf sizeof}.
+\begin{itemize}
+\item {\bf Malloc} will take one argument, the size in bytes of the memory to allocate. It returns a void pointer to the block of memory which is then cast to the type that we wish to use. In the case of line 3 it is the pointer to a pointer of int values. 
+\begin{mdframed}
+{\bf Example: }This chain of pointers is necessary as we need a two-dimensional array. Each index is calculated as an offset from the base address referenced by the pointer. For example grid[2] is 2 times the size of an int pointer away from the base address of the grid pointer. If {\it \&grid} is 0x10 then {\it \&grid[2]} will be 0x90, assuming a pointer size of 4 bytes.
+\end{mdframed}
+\item {\bf Calloc} will take two arguments, the number of array elements to allocate, and the size of each individual array element. This also returns a void pointer which has to be cast to a desired type. However, there is a difference in the behaviour of the function. Calloc will zero-initialise the memory allocated. Whereas malloc will not initialise any memory in the allocated block, the indeterminate values will remain. 
+\item {\bf Bool} is a data type most Java programmers will be familiar with, however it was not included in the standard revision of C until the release of C99. To this day the {\bf bool} header file has to be included in the C program by a preprocessor macro as indicated by appendix A-1 line 6. 
+\item {\bf Sizeof} is a function that returns the size of its parameter in bytes. Extremely useful in maintaining portability of C code across architectures. This is because the compiler will know what the size in bytes of an Integer is on its system...probably better than the programmer.
+\end{itemize}
+\begin{mdframed}
+{\bf Knowledge Box:} Type-safety really takes the back-seat when programming in C! When we say something is {\bf type safe} we mean that the language guarantees that a value of one type can't be incorrectly used as if it were another type. This makes C very type {\bf unsafe}! Casting a pointer to another type allows the programmer to use it as that type even though the actual value could mean absolutely nothing. Also the function {\bf free} allows the programmer to deallocate memory and reassign a pointers and possibly use them later. The concept of {\bf casting} and {\bf dangling pointers} means that C can never be type safe! \cite[PLDI B, Lane]{ref11}
+\end{mdframed}
+\smallskip
+After the array is allocated the next step in the Game of Life algorithm is to assign an initial global state to the grid by {\bf randomly spacing life forms in the array}. In the sequential program this is done by choosing a probability of life existing and randomly (not actually random at all - but that's another project!) placing live or dead cells. The function in {\it listing 2} iterates through the array using nested for-loops. Remember the allocation of the memory from the last code snippet? The parameters given to the malloc or calloc functions are DIM + 2 in size each time! This is because of my design decision to use a orthogonal toroidal array, which gives the grid cyclic boundary conditions. The grid has to have an extra 2 rows and an extra 2 columns to house the {\bf ghost cells} which will be explained shortly.
+\begin{lstlisting}[language=C,caption={Randomly spacing lifeforms in the array}, morekeywords={malloc,calloc,bool}]
+#if USEBOOL == 1
+void fill_rand(bool **grid_ptr)
+#else
+void fill_rand(int **grid_ptr)
+#endif
+{
+	int i, j;
+	srand(SEED);
 
+	cell_count = 0;
+	life_count = 0;
+
+	for (i = 1; i <= DIM; i++)
+	{
+		for (j = 1; j <= DIM; j++)
+		{
+			if (rand() % LIFE == 1)
+			{
+				life_count++;
+				grid_ptr[i][j] = 1;
+			} else {
+				grid_ptr[i][j] = 0;
+			}
+			cell_count++;
+		}
+	}
+}
+\end{lstlisting}
+However, in these loops we only care about the cells relating to the global state, so the iteration bounds are set at 1 and less than or equal to DIM respectively. Notice line 8, here the random function that's used on line 17 is seeded with a preprocessor defined value. This is to ensure that the random set returned will always be the same. Keeping the same input data and confirming by a replicable result is vital at this stage to confirm the correctness of the code. On line 17 the value returned by the {\it rand()} function is used as input to a modulus function with the macro {\it LIFE} which defines the probability of life occurring. In this case, if LIFE were to equal 3, then the approximate number of live cells would be equal to the total number of cells divided by 3. Also notice the preprocessor macro around the function declaration which will change the type of the parameter accepted.\\
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{sequentialGhost.png}
+\caption{A Level 1 Activity Diagram of the copying ghost cells process}
+\label{fig: Algo1}
+\end{figure}
+\\After the initial global state has been defined we can begin the main game loop! That brings us on to the {\bf copying of the ghost cells}. As mentioned before, cyclic boundary control means that the grid will perform as if it were laid out over a toroid. This allows such lifeforms as translating oscillators (like the glider mentioned in section 3.1) to continue infinitely as long as they are not obstructed by another live cell. At the beginning of each generation the columns at index [i][DIM + 1] and [i][0], and the rows at index [0][i] and [DIM + 1][i], are written to with the attributes stored in columns [i][1] and [i][DIM] and rows [DIM][i] and [1][i] respectively. Where i is any value between 1 and DIM for the first loop and 0 and DIM + 1 for the second. This is illustrated in an abstract manner in {\it figure 5} and in full in {\it listing 3} where lines 4 and 5, 10 and 11, represent the copying of the ghost cells for columns and rows respectively. This change in the range of iteration is so that we can ensure the cells in the corners have a value. A visual example of the memory elements and their values can be seen in {\it figure 1}. 
+\begin{lstlisting}[caption = {Copying ghost cells}]
+    /*copy ghost columns to grid */
+    for (i = 1; i <= DIM; i++)
+    {
+        grid_ptr[i][DIM + 1] = grid_ptr[i][1];
+        grid_ptr[i][0] = grid_ptr[i][DIM];
+    }
+    /*copy ghost rows to grid */
+    for (i = 0; i <= DIM + 1; j++)
+    {
+        grid_ptr[0][i] = grid_ptr[DIM][i];
+        grid_ptr[DIM + 1][i] = grid_ptr[1][i];
+    }
+\end{lstlisting}
+Now that the initial grid is full to the brim, the program can begin processing the next generation by applying the transitional function for Conway's Game of Life. An abstract view of the algorithm is given by {\it figure 6} where the nested nature of the loops and the decisions based around the logic of the transitional function can be seen causing changes in the state of the array for the next generation. It should be fairly obvious to see how the rules listed in {\it figure 6} conform to the rules enumerated in section 3.1. This algorithm is written out in full in {\it listing 4} with the counting of the moore-neighbourhood taking place from line 12 and the application of the transitional function from line 18. Every rule must write something to the appropriate element of the array for the state of the next generation. this can be seen in line 20, a life being written, line 23, a death being written, or line 26, a survival being written. After this it is simply a case of swapping the grid and new\_grid pointers and incrementing the {\it gen} counter. The game will continue until {\it gen} equals MAXGEN. As mentioned earlier the correctness of my results is vital and a function to count the number of alive cells after the game has finished is also in the code base in A.1. This can be compared against other models to ensure correctness. 
+\bigskip\bigskip\bigskip
+%\begin{figure}[h]
+\begin{lstlisting}[caption={Processing the Moore-neighbourhood and writing to the next generations global state array}]
+#if USEBOOL == 1
+void process(bool **grid_ptr, bool **new_grid_ptr)
+#else
+void process(int **grid_ptr, int **new_grid_ptr)
+#endif
+{
+	int i, j, count;
+	for (i = 1; i <= DIM; i++)
+	{
+		for (j = 1; j <= DIM; j++)
+		{
+			count =
+			    grid_ptr[i - 1][j - 1] + grid_ptr[i - 1][j] +
+			    grid_ptr[i - 1][j + 1] + grid_ptr[i][j - 1] +
+			    grid_ptr[i][j + 1] + grid_ptr[i + 1][j - 1] +
+			    grid_ptr[i + 1][j] + grid_ptr[i + 1][j + 1];
+
+			if (count == 3 || (count == 2 && grid_ptr[i][j] == 1))
+			{
+				new_grid_ptr[i][j] = 1;
+			} else if (count < 2 || count > 3)
+			{
+				new_grid_ptr[i][j] = 0;
+			} else if (count == 2)
+			{
+				new_grid_ptr[i][j] = grid_ptr[i][j];
+			}
+		}
+	}
+}
+\end{lstlisting}
+%\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.4]{sequentialProcessGrid.png}
+\caption{A Level 1 Activity Diagram of the application of the transitional function and rule logic}
+\label{fig: Algo0}
+\end{figure}
+These blocks of code have helped me make some fairly crucial design decisions on my C and C++ versions and to a lesser extent my Java and Python versions. Earlier on I introduced the idea of a preprocessor macro and explained my use of them. This has helped me make two big design decisions. Firstly to use the function {\bf calloc} for allocating my array memory, and secondly to use the {\bf bool} import and data-type for the element attributes.
+\begin{itemize}
+\item {\bf Calloc} was chosen because, on a whim, I tried to validate the correctness of my code using two different programs for runtime analysis. {\bf Valgrind} and {\bf GProf}. Both programs reported runtime errors relating to the memory structures, during any type of access to my arrays. Evidence of the errors is in appendix A.2. Malloc seemed to be leaking and causing a large number of errors. One of which broke Linux indefinitely! After switching to calloc I had no such errors and the program ran correctly. Interestingly enough the results recorded from both the malloc version and the calloc version were the same the only difference was the memory leak. This error was still present even if the arrays were freed using the {\bf free(void*)} function.
+\item The {\bf bool} library was chosen because, apart from being the obvious choice. In that each cell in the automaton has only two states, alive or dead. But because it was 3\% faster in testing, consistently. Unsurprisingly enough fetching a boolean value from memory, with a size of 1 byte, compared to a 4-byte integer, the boolean saves on clock cycles as it uses less bandwidth. At least that is what I thought. I did some research into how the assembler treats the use of bool versus an int. I produced a piece of code that attempts to perform an if-statement on a bool and an int, and made the compiler produce the assembly code for an optimised version(it's easier to read than unoptimised assembly). The code tells us that the only difference between both functions f() and g() is the {\it cmpl} and {\it cmpb} assembly respectively. There is not difference between the function of these calls other than one only expects a byte as an argument {\it cmpb}(compare byte) and the other is a simple logical compare. Knowing this I tried to find out what values were passed into the registers and in a x86-64 architecture the whole of the general purpose register has to be used. So where do the performance benefits come from? This can be seen in the appendix A.3. (RESEARCH MORE! or leave out!)
+\end{itemize}
 \subsubsection{A Thought Process for Parallelism}
-
-Why do we make code parallel? So we can increase the speed at which a process or program can execute, of course! There are three main levels of parallelism: {\bf instruction-level parallelism}, {\bf data parallelism}, and {\bf task parallelism}. Where instruction-level parallelism represents instruction pipelining, or branch prediction \cite[Patterson, Hennessy, p41]{ref10}. Task parallelism is the concurrent processing of different tasks (or processes). Data parallelism, the beast that I am concerned with, is the decomposition of data into smaller blocks so that work can be carried out on them in parallel by separate processing units \cite[Patterson, Hennessy, A17]{ref10}.
+Why do we make code parallel? So we can increase the speed at which a process or program can execute, of course! There are three main levels of parallelism: {\bf instruction-level parallelism}, {\bf data parallelism}, and {\bf task parallelism}. Where instruction-level parallelism represents instruction pipelining, or branch prediction \cite[Patterson, Hennessy, p41]{ref10}. Task parallelism is the concurrent processing of different tasks (or processes). Data parallelism, the beast that I am concerned with, is the decomposition of data into smaller blocks so that work can be carried out on them in parallel by separate processing units \cite[Patterson, Hennessy, A-17]{ref10}.
 \subsection{Threads}
 \begin{itemize}
 \item Von Neumann architecture
@@ -275,6 +387,7 @@ Why do we make code parallel? So we can increase the speed at which a process or
 \subitem How will this effect runtime performance?
 \item The Abstract pseudo Algorithm!!
 \subitem ``Basic Explanation.txt''
+\end{itemize}
 \subsection{C with OpenMP}
 \begin{itemize}
 \item Language features
@@ -340,7 +453,14 @@ Some sort of choice based on the most appropriate language.
 \nocite{ref6}
 \bibliographystyle{unsrt}
 \bibliography{Project.bib}
+\appendix
 \section{Appendices}
-All the code!! With comments
-\end{itemize}
+\subsection{Sequential C Implementation}
+\lstinputlisting[language=C]{../Sequential/seqGoL.c}
+\subsection{Valgrind and GProf output}
+\includegraphics[scale=0.5]{valgrind1.png}\\
+\includegraphics[scale=0.5]{valgrind2.png}
+\subsection{Bool and Int research with C file and ASM file}
+\lstinputlisting[language=C]{../Sequential/boolInt.c}
+\lstinputlisting[language={[x86masm]Assembler},caption={Fully Optimised C Assembly code}]{../Sequential/boolInt.s}
 \end{document}

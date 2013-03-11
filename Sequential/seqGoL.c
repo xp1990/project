@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdbool.h>
 
-#define MAXGEN 1000
+#define MAXGEN 10000
 #define DIM 1024
 #define LIFE 3
 #define SEED 2012
@@ -208,9 +208,6 @@ void process(bool **grid_ptr, bool **new_grid_ptr)
 void process(int **grid_ptr, int **new_grid_ptr)
 #endif
 {
-	/*this can be made more efficient! produce two versions using compiler flags.
-	 *second version will break loop after a condition is met... 
-	 */
 
 	int i, j, count;
 

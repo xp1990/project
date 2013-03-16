@@ -24,28 +24,28 @@ unsigned int nthreads;
 
 
 #if BOOL == 1
-void read_file(char *, bool **);
-void print_grid(bool **);
-void fill_rand(int **);
+void readFile(char *, bool **);
+void printGrid(bool **);
+void fillRand(int **);
 #else
-void read_file(char *, int **);
-void print_grid(int **);
-void fill_rand(int **);
+void readFile(char *, int **);
+void printGrid(int **);
+void fillRand(int **);
 #endif
 
 
 #if INLINE == 1 && BOOL == 1
 inline void process(bool **, bool **, int, int, int);
-inline void priv_memcpy(int, int, bool **, bool **);
+inline void privMemCopy(int, int, bool **, bool **);
 #elif INLINE == 0 && BOOL == 1
 void process(bool **, bool **, int, int, int);
-void priv_memcpy(int, int, bool **, bool **);
+void privMemCopy(int, int, bool **, bool **);
 #elif INLINE == 0 && BOOL == 0
 void process(int **, int **, int, int, int);
-void priv_memcpy(int, int, int **, int **);
+void privMemCopy(int, int, int **, int **);
 #elif INLINE == 1 && BOOL == 0
 inline void process(int **, int **, int, int, int);
-inline void priv_memcpy(int, int, int **, int **);
+inline void privMemCopy(int, int, int **, int **);
 #endif
 
 int main(int argc, char *argv[])
@@ -106,14 +106,14 @@ int main(int argc, char *argv[])
 	new_grid_ptr = new_grid;
 
 	/*used if user wants to fill grid using rand */
-	//fill_rand(grid_ptr);
+	//fillRand(grid_ptr);
 
-	read_file(FILENAME, grid_ptr);
+	readFile(FILENAME, grid_ptr);
 
 	/*private OMP vars */
 	int start, stop, tid;
 
-	print_grid(grid_ptr);
+	printGrid(grid_ptr);
 	printf("\nCells: %d\nAlive: %d\n", cell_count, life_count);
 
 	/*begin timing */
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 			}
 			//printf("beginning private memory copy...\n");
 
-			priv_memcpy(start, stop, priv_grid, grid_ptr);
+			privMemCopy(start, stop, priv_grid, grid_ptr);
 
 			//printf("Copied grid to private thread memory\n");
 
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
 				grid_ptr = new_grid_ptr;
 				new_grid_ptr = temp_ptr;
 
-				//print_grid(grid_ptr);
+				//printGrid(grid_ptr);
 			}
 		}
 	}//end of omp
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 	time_spent = (end.tv_sec - begin.tv_sec);
 	time_spent = time_spent + (end.tv_nsec - begin.tv_nsec) / 1000000000.0;
 
-	print_grid(grid_ptr);
+	printGrid(grid_ptr);
 	printf("\nCells: %d\nAlive: %d\n", cell_count, life_count);
 
 	printf("\nTime taken with %d threads is: %f\n", nthreads, time_spent);
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 	return (0);
 }
 
-void fill_rand(int **grid_ptr)
+void fillRand(int **grid_ptr)
 {
 	int i, j;
 
@@ -303,9 +303,9 @@ void fill_rand(int **grid_ptr)
 }
 
 #if BOOL == 1
-void print_grid(bool **g)
+void printGrid(bool **g)
 #else
-void print_grid(int **g)
+void printGrid(int **g)
 #endif
 {
 	int i, j;
@@ -375,9 +375,9 @@ inline void
 void
 #endif
 #if BOOL == 1
-priv_memcpy(int start, int stop, bool **priv_grid, bool **grid_ptr)
+privMemCopy(int start, int stop, bool **priv_grid, bool **grid_ptr)
 #else
-priv_memcpy(int start, int stop, int **priv_grid, int **grid_ptr)
+privMemCopy(int start, int stop, int **priv_grid, int **grid_ptr)
 #endif
 {
 	int x, y;
@@ -389,9 +389,9 @@ priv_memcpy(int start, int stop, int **priv_grid, int **grid_ptr)
 	}
 }
 #if BOOL == 1
-void read_file(char *name, bool **grid)
+void readFile(char *name, bool **grid)
 #else
-void read_file(char *name, int **grid)
+void readFile(char *name, int **grid)
 #endif
 {
 	FILE *fp;

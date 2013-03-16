@@ -24,12 +24,12 @@ struct timespec begin, end;
 int cell_count, life_count;
 
 #if USEBOOL == 1
-    void print_grid(bool **);
-    void fill_rand(bool **);
+    void printGrid(bool **);
+    void fillRand(bool **);
     void process(bool **, bool **);
 #else
-    void print_grid(int **);
-    void fill_rand(int **);
+    void printGrid(int **);
+    void fillRand(int **);
     void process(int **, int **);
 #endif
 
@@ -92,9 +92,9 @@ int main(int argc, char *argv[])
 	new_grid_ptr = new_grid;
 
 	/*used if user wants to fill grid using rand */
-	fill_rand(grid_ptr);
+	fillRand(grid_ptr);
 
-	print_grid(grid_ptr);
+	printGrid(grid_ptr);
 	printf("\nCells: %d\nAlive: %d\n", cell_count, life_count);
 
 	/*begin timing */
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     time_spent = (end.tv_sec - begin.tv_sec);
     time_spent = time_spent + (end.tv_nsec - begin.tv_nsec) / 1000000000.0;
 
-    print_grid(grid_ptr);
+    printGrid(grid_ptr);
     printf("\nCells: %d\nAlive: %d\n", cell_count, life_count);
 
     printf("\nTime taken %f\n", time_spent);
@@ -145,9 +145,9 @@ int main(int argc, char *argv[])
 }
 
 #if USEBOOL == 1
-void fill_rand(bool **grid_ptr)
+void fillRand(bool **grid_ptr)
 #else
-void fill_rand(int **grid_ptr)
+void fillRand(int **grid_ptr)
 #endif
 {
 	int i, j;
@@ -179,9 +179,9 @@ void fill_rand(int **grid_ptr)
 }
 
 #if USEBOOL == 1
-void print_grid(bool **g)
+void printGrid(bool **g)
 #else
-void print_grid(int **g)
+void printGrid(int **g)
 #endif
 {
 	int i, j;

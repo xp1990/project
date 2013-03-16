@@ -1,12 +1,11 @@
 #define VEC 0
-#define MALLOC 0
+#define BOOL 1
 #define DIM 1024
-#define MAXGEN 1000
+#define MAXGEN 10000
 #define THREADS 4
 #define FD "1024.dat"
 
 #include <thread>
-#include <ctime>
 #include "Grid.cpp"
 
 

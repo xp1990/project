@@ -1,5 +1,5 @@
 #define VEC 0
-#define MALLOC 0
+#define BOOL 0
 #define DIM 1024
 #define MAXGEN 10000
 #define THREADS 4

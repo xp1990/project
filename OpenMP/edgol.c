@@ -4,11 +4,12 @@
 #include <omp.h>
 #include <unistd.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define MAXGEN 10000
 #define DIM 1024
 #define LIFE 3
-#define MALLOC 0
+#define BOOL 0
 #define SEED 2012
 #define THREADS 4 
 #define SHARED 1
@@ -16,34 +17,56 @@
 #define REGISTER 0
 #define FILENAME "1024.dat"
 
-#if REGISTER == 1
-register int **grid;
-register int **new_grid;
-#else
-int **grid;
-int **new_grid;
-#endif
-
 struct timespec begin, end;
 int cell_count, life_count;
 
 unsigned int nthreads;
 
-void print_grid(int **);
-void read_file(char *, int **);
-void fill_rand(int **);
 
-#if INLINE == 1
-inline void process(int **, int **, int, int, int);
-inline void priv_memcpy(int, int, int **, int **);
+#if BOOL == 1
+void read_file(char *, bool **);
+void print_grid(bool **);
+void fill_rand(int **);
 #else
+void read_file(char *, int **);
+void print_grid(int **);
+void fill_rand(int **);
+#endif
+
+
+#if INLINE == 1 && BOOL == 1
+inline void process(bool **, bool **, int, int, int);
+inline void priv_memcpy(int, int, bool **, bool **);
+#elif INLINE == 0 && BOOL == 1
+void process(bool **, bool **, int, int, int);
+void priv_memcpy(int, int, bool **, bool **);
+#elif INLINE == 0 && BOOL == 0
 void process(int **, int **, int, int, int);
 void priv_memcpy(int, int, int **, int **);
+#elif INLINE == 1 && BOOL == 0
+inline void process(int **, int **, int, int, int);
+inline void priv_memcpy(int, int, int **, int **);
 #endif
 
 int main(int argc, char *argv[])
 {
-	int **grid_ptr, **new_grid_ptr, **temp_ptr;
+    
+    #if REGISTER == 1 && BOOL == 0
+        register int **grid;
+        register int **new_grid;
+    #elif BOOL == 0
+        int **grid;
+        int **new_grid;
+    #elif BOOL == 1
+        bool **grid;
+        bool **new_grid;
+    #endif
+    
+    #if BOOL == 1
+        bool **grid_ptr, **new_grid_ptr, **temp_ptr;
+    #else
+        int **grid_ptr, **new_grid_ptr, **temp_ptr;
+    #endif
 
 	/*Assign global var to num_threads */
 	nthreads = THREADS;
@@ -58,14 +81,14 @@ int main(int argc, char *argv[])
 	 *here we allocate enough space for our temp transfer grid and
 	 *our original grid
 	 */
-	#if MALLOC == 1
-		grid = (int **)malloc(sizeof(int *) * DIM + 2);
-		new_grid = (int **)malloc(sizeof(int *) * DIM + 2);
+	#if BOOL == 1
+		grid = (bool **)calloc(DIM + 2, sizeof(bool *));
+		new_grid = (bool **)calloc(DIM + 2, sizeof(bool *));
 		
 		for (i = 0; i < DIM + 2; i++)
 		{
-			grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
-			new_grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
+			grid[i] = (bool *)calloc(DIM + 2, sizeof(bool *));
+			new_grid[i] = (bool *)calloc(DIM + 2, sizeof(bool *));
 		}
 	#else
 		grid = (int **)calloc(DIM + 2, sizeof(int *));
@@ -279,7 +302,11 @@ void fill_rand(int **grid_ptr)
 	}
 }
 
+#if BOOL == 1
+void print_grid(bool **g)
+#else
 void print_grid(int **g)
+#endif
 {
 	int i, j;
 
@@ -304,7 +331,11 @@ inline void
 #else
 void
 #endif
+#if BOOL == 1
+process(bool **grid_ptr, bool **new_grid_ptr, int start, int stop, int tid)
+#else
 process(int **grid_ptr, int **new_grid_ptr, int start, int stop, int tid)
+#endif
 {
 
 	/*this can be made more efficient! produce two versions using compiler flags.
@@ -343,7 +374,11 @@ inline void
 #else
 void
 #endif
+#if BOOL == 1
+priv_memcpy(int start, int stop, bool **priv_grid, bool **grid_ptr)
+#else
 priv_memcpy(int start, int stop, int **priv_grid, int **grid_ptr)
+#endif
 {
 	int x, y;
 
@@ -353,8 +388,11 @@ priv_memcpy(int start, int stop, int **priv_grid, int **grid_ptr)
 		}
 	}
 }
-
+#if BOOL == 1
+void read_file(char *name, bool **grid)
+#else
 void read_file(char *name, int **grid)
+#endif
 {
 	FILE *fp;
 	int c, x = 1, y = 1;

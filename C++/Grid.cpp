@@ -10,7 +10,13 @@ class Grid
     public:
         Grid(char *);
         void setCell(int, int, int);
-        int getCell(int, int);
+        
+        #if BOOL == 1
+            bool getCell(int, int);
+        #else
+            int getCell(int, int);
+        #endif
+        
         void printGrid();
         void finishGen();
 
@@ -20,8 +26,13 @@ class Grid
         
 
 #if VEC == 0
+    #if BOOL == 1
+        bool **grid;
+        bool **new_grid;
+    #else
         int **grid;
         int **new_grid;
+    #endif
 #else
         vector< vector<int> > grid;
         vector< vector<int> > new_grid;
@@ -35,14 +46,14 @@ Grid::Grid(char * F)
     FILENAME = F;
     
 #if VEC == 0
-	#if MALLOC == 1
-		grid = (int **)malloc(sizeof(int *) * DIM + 2);
-		new_grid = (int **)malloc(sizeof(int *) * DIM + 2);
+	#if BOOL == 1
+		grid = (bool **)malloc(sizeof(bool *) * DIM + 2);
+		new_grid = (bool **)malloc(sizeof(bool *) * DIM + 2);
 		
 		for (int i = 0; i < DIM + 2; i++)
 		{
-			grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
-			new_grid[i] = (int *)malloc(sizeof(int *) * DIM + 2);
+			grid[i] = (bool *)malloc(sizeof(bool *) * DIM + 2);
+			new_grid[i] = (bool *)malloc(sizeof(bool *) * DIM + 2);
 		}
 	#else
 		grid = (int **)calloc(DIM + 2, sizeof(int *));
@@ -154,7 +165,11 @@ void Grid::setCell(int x, int y, int val)
     new_grid[x][y] = val;
 }
 
+#if BOOL == 1
+bool Grid::getCell(int x, int y)
+#else
 int Grid::getCell(int x, int y)
+#endif
 {
     return grid[x][y];
 }

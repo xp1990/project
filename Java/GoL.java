@@ -35,26 +35,36 @@ class LifeThread extends Thread
 
     private void processChunk()
     {
+        int count = 0;
+        
         for(x = start; x <= stop; x++)
         {
             for(y = 1; y <= DIM; y++)
             {
-                int count = g1.getCell(x-1,y-1) + g1.getCell(x-1,y) + g1.getCell(x-1, y+1) +
-                                        g1.getCell(x,y-1) + g1.getCell(x,y+1) +
-                                        g1.getCell(x+1,y-1) + g1.getCell(x+1,y) + g1.getCell(x+1,y+1);
-
-                if(count == 3 || (count == 2 && g1.getCell(x, y) == 1))
+                for(int i = -1; i < 2; i++)
                 {
-                    g1.setCell(x, y, 1);                    
+                    for(int j = -1; j < 2; j++)
+                    {
+                        if(!(i == 0 && j == 0))
+                        {
+                            count += boolToInt(g1.getCell(x + i, y + j));
+                        }
+                    }
+                }
+
+                if(count == 3 || (count == 2 && g1.getCell(x, y) == true))
+                {
+                    g1.setCell(x, y, true);                    
                 }
                 else if(count < 2 || count > 3)
                 {
-                    g1.setCell(x, y, 0);
+                    g1.setCell(x, y, false);
                 }
                 else if(count == 2)
                 {
                     g1.setCell(x, y, g1.getCell(x, y));
                 }
+                count = 0;
             }
         }
     }
@@ -63,6 +73,14 @@ class LifeThread extends Thread
 	{
 		return tid;
 	}
+    
+    private int boolToInt(boolean val)
+    {
+        if(val == true)
+            return 1;
+        else
+            return 0;
+    }
 }
 
 class Grid
@@ -71,7 +89,7 @@ class Grid
 
     private final String FILENAME;
 
-	private int[][] grid, new_grid;
+	private boolean[][] grid, new_grid;
 
     private Random r1;
     
@@ -82,8 +100,8 @@ class Grid
 		LIFE = L;
         FILENAME = F;
 
-		grid = new int[DIM+2][DIM+2];
-		new_grid = new int[DIM+2][DIM+2];
+		grid = new boolean[DIM+2][DIM+2];
+		new_grid = new boolean[DIM+2][DIM+2];
 
         r1 = new Random(2012);
         
@@ -119,7 +137,7 @@ class Grid
 		{
 			for(int y = 1; y <= DIM; y++)
 			{
-				if(getCell(x,y) == 1)
+				if(getCell(x,y) == true)
 					aliveCount++;
 
 				cellCount++;
@@ -132,12 +150,12 @@ class Grid
 		System.out.println("Alive: " + aliveCount);
 	}
 
-	public int getCell(int x, int y)
+	public boolean getCell(int x, int y)
 	{
 		return grid[x][y];
 	}
 
-	public void setCell(int x, int y, int val)
+	public void setCell(int x, int y, boolean val)
 	{
 		new_grid[x][y] = val;
 	}
@@ -150,9 +168,9 @@ class Grid
           {
                 
                 if (r1.nextInt(LIFE) == 1)
-                    grid[x][y] = 1;
+                    grid[x][y] = true;
                 else
-                    grid[x][y] = 0;
+                    grid[x][y] = false;
           }
         }
     }
@@ -190,12 +208,12 @@ class Grid
             {
                 if((char)r == '1')
                 {
-                    grid[x][y] = 1;
+                    grid[x][y] = true;
                     y++;
                 }
                 else if((char)r == '0')
                 {
-                    grid[x][y] = 0;
+                    grid[x][y] = false;
                     y++;
                 }
                 else if(r == 10)

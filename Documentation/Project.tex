@@ -234,9 +234,9 @@ In {\it listing 1} we begin to understand the plethora of options that are open 
 After the array is allocated the next step in the Game of Life algorithm is to assign an initial global state to the grid by {\bf randomly spacing life forms in the array}. In the sequential program this is done by choosing a probability of life existing and randomly (not actually random at all - but that's another project!) placing live or dead cells. The function in {\it listing 2} iterates through the array using nested for-loops. Remember the allocation of the memory from the last code snippet? The parameters given to the malloc or calloc functions are DIM + 2 in size each time! This is because of my design decision to use a orthogonal toroidal array, which gives the grid cyclic boundary conditions. The grid has to have an extra 2 rows and an extra 2 columns to house the {\bf ghost cells} which will be explained shortly.
 \begin{lstlisting}[language=C,caption={Randomly spacing lifeforms in the array}, morekeywords={malloc,calloc,bool}]
 #if USEBOOL == 1
-void fill_rand(bool **grid_ptr)
+void fillRand(bool **grid_ptr)
 #else
-void fill_rand(int **grid_ptr)
+void fillRand(int **grid_ptr)
 #endif
 {
 	int i, j;
@@ -332,21 +332,32 @@ These blocks of code have helped me make some fairly crucial design decisions on
 \subsubsection{A Thought Process for Parallelism}
 Why do we make code parallel? So we can increase the speed at which a process or program can execute, of course! There are three main levels of parallelism: {\bf instruction-level parallelism}, {\bf data parallelism}, and {\bf task parallelism}. Where instruction-level parallelism represents instruction pipelining, branch prediction, or super-scalar architectures \cite[Patterson, Hennessy, p41]{ref10}. Task parallelism is the concurrent processing of different tasks (or processes). Data parallelism, the beast that I am concerned with, is the decomposition of data into smaller blocks so that work can be carried out on them in parallel by separate processing units \cite[Patterson, Hennessy, A-17]{ref10}.\\
 
-When we begin to think about realising and adapting the program to run concurrently there are a few design processes and activities to consider before writing. {\bf Partitioning} involves dividing up the program into concurrent components then {\bf granularity} is adjusting the ratio of computation to communication for these parallel components and then {\bf mapping} this refactored design to computational units. \cite[p77,78]{ref9}
+When we begin to think about realising and adapting the program to run concurrently there are a few design processes and activities to consider before writing. {\bf Partitioning} involves dividing up the program into concurrent components then {\bf granularity} is adjusting the ratio of computation to communication for these parallel components and then {\bf mapping} this refactored design to computational units. \cite[p77,78]{ref9} A quantitative approach can be achieved by identifying code that {\bf can} be made parallel and code that {\bf can't} be made parallel. The application of this quantitative method is known as {\bf Amdahl's Law}. In the context of the prototype and the parallel code, this can be analysed by the amount of time an entire run of the program spends in the cell processing phase and the amount of time the program spends in the improved cell processing phase. 
+%convert code to time for the entirety of the programs rune rather than the processing only to successfully apply amdahl's law.
+\bigskip
+\begin{mdframed}
+{\bf Definition Box:} Amdahl's Law states that the performance enhancement possible with a given improvement (for instance: creating a parallel region from a serial region) is limited by the amount that the improved feature is used. \cite[Patterson, Hennessey, p51]{ref10}
+
+\end{mdframed}
 \subsubsection*{Partitioning}
-Partitioning a program to run concurrently begins by identifying code that {\bf can} be made parallel and code that {\bf can't} be made parallel. Our main concerns here are the ability to maintain {\bf scalability} and {\bf hide latency} when the program is run in a parallel manner. Where scalability refers to the measure of increased performance for an increased number of computational units. And hiding latency is the extent to which the overheads created by an increase of communication and code are hidden by an overall speedup and increased processing power (by utilising multi-core or multi-computer architectures). \cite[p78,79]{ref9} To address the issues of scalability and latency the initial workload will be {\bf decomposed} into a number of partitions less than or equal to the number of computational units available.\\
+Our main concerns here are the ability to maintain {\bf scalability} and {\bf hide latency} when the program is run in a parallel manner. Where scalability refers to the measure of increased performance for an increased number of computational units. And hiding latency is the extent to which the overheads created by an increase of communication and code are hidden by an overall speedup and increased processing power (by utilising multi-core or multi-computer architectures). \cite[p78,79]{ref9} To address the issues of scalability and latency the initial workload will be {\bf decomposed} into a number of partitions less than or equal to the number of computational units available.\\
+%something is wrong with the formatting if this line is removed?
 
 \begin{mdframed}
 {\bf Example Box:} When talking about hiding latency the concept usually refers to the down-time a processing unit may encounter when it has finished its work or is waiting for information. This is talked about in a more relevant context later in another section. Here, however, I am referencing the overheads created by that actual inclusion of code that makes concurrency possible. For example, the calculation of the amount of work to schedule each processing unit and the time spent waiting for synchronisation increase overall program latency as it has the possibility of increasing the down-time of a processing unit. 
 \end{mdframed}
 \bigskip
-How do we begin to partition the problem into concurrently executable code? The answer is {\bf domain decomposition}! This involves dividing up the data of the program so that it can be executed concurrently. My most prominent data structure is the set of two-dimensional arrays, one that is read from by the program and one that is written to. So, in the context of Conway's Game of Life, this would mean dividing up the array representing the global state into smaller arrays or {\bf chunks} to signify the work for each individual processing unit to compute. This highlights the issue of {\bf problem scaling} where the number and size of the chunks created during the partitioning process should be proportionate to the amount of available processing units. This is so to maintain and maximise the performance improvements from parallelising the work. 
+How do we begin to partition the problem into concurrently executable code? The answer is {\bf domain decomposition}! This involves dividing up the data of the program so that it can be executed concurrently. My most prominent data structure is the set of two-dimensional arrays, one that is read from by the program and one that is written to. So, in the context of Conway's Game of Life, this would mean dividing up the array representing the global state into smaller arrays or {\bf chunks} to signify the work for each individual processing unit to compute. In this case the transitional function could be applied by independent computational units on their respective workloads which have been calculated by decomposing the data domain. However, this highlights the issue of {\bf problem scaling} where the number and size of the chunks created during the partitioning process should be proportionate to the amount of available processing units. This is so to maintain and maximise the performance improvements from parallelising the work. 
 \bigskip
 \begin{mdframed}
 {\bf Knowledge Box:} As well as {\bf domain decomposition} there exists concepts of {\bf functional decomposition} and {\bf irregular problem decomposition}. 
-
 \end{mdframed}
-
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.7]{DomainDecomposition.png}
+\caption{The Global state and how it might be partitioned to support parallel processing}
+\label{fig: Para1}
+\end{figure}
 
 
 \subsection{Threads}
@@ -423,6 +434,7 @@ How do we begin to partition the problem into concurrently executable code? The 
 \item POI!! Implementing different library directives changes the results drastically.... Why?! Look into trace thread? correction...Linux Trace Tool Kit
 \item Does it conform to the abstract routine?
 \item shared memory versus private memory implementation. Problems? Results? Terribleness! Include code. EVIDENCE!!
+\item Amdahl's Law with GProf
 \end{itemize} 
 
 OpenMP is an ``API specification for parallel programming'' ... \cite{ref3}

@@ -89,28 +89,40 @@
 
 \begin{document}
 \maketitle
-\tableofcontents
 \pagebreak
+\tableofcontents
 \section{Abstract}
 \section{Introduction}
+With such a large number of choices open to programmers in the context of multi-core programming and writing concurrent code there is no wonder that it can be a bit of a minefield getting started. This investigation is aimed at providing an insight into the relevant features and facilities of popular (and not so popular) multi-threading solutions. Whilst also aiming to provide details of some of the quirks and eccentricities encountered during parallel program design and implementation.
 
+The scope of this project includes a discussion of the procedures involved in designing and implementing parallel code, and the generic features of multi-thread capable libraries. A walk-through of the different code implementations and an analysis based on the {\bf core values} outlined later in this section.
+%Using Conway's Game of Life as a conduit to explore the facilities and functionality of different multi-threading libraries and languages, I will compare and contrast the different implementations I produce to investigate their overall appropriateness for simple parallel programs.
+%Why Conway's Game of Life? 
 \subsection{Motivation}
-
+Designing parallel code, especially for a beginner, is an activity filled with difficult decisions about how to proceed. At every point in the development cycle the stakes are high, and the overall success of the application depends heavily on decisions made during the design and implementation stage. Most importantly, I believe the likelihood of producing a successful parallel application relies on the decision of what multi-threaded language or library to use. The motivation for this project resides my belief that there is a need for a concise resource that contrasts and compares the benefits and pitfalls of popular multi-threading packages for a parallel problem which is simple and common.
 \subsection{Aim}
+To compare and contrast multi-threading languages and libraries using Conway's Game of Life as an example of language facilities and features. The overall analysis of a particular implementation will be based around {\bf core values}. The successful satisfaction of these will lead to a conclusion based around the suitability of a particular model for a simple parallel problem. Whilst also conducting an investigation into the process of creating parallel code and the obstacles and challenges that come with it.
 \subsection{Objectives}
-
-\subsection{Core Values}
-\subsection{Project Structure}
 \begin{itemize}
-\item Efficiency
-\subitem Concurrent applications must run quickly and make good use of processing resources. With regard to a concurrent algorithm, efficiency will examine the overhead computations that must be added to ensure a correct execution, how alternative arrangements of threads or organizations of tasks might work better or worse, and what other problems there could be with the performance of the threaded application.
-\item Simplicity
-\subitem The simpler a concurrent algorithm is, the easier it will be to develop, debug, verify, and maintain. In terms of concurrent code based on a serial version, discussions of simplicity will focus on how much extra code you have to add to achieve a concurrent solution and how much of the original structure of the serial algorithm remains.
-\item Portability
-\subitem Portability discussions will examine the tradeoffs that could encountered if you used a different threading model from the implemented design. While this book is primarily dedicated to the design and exploration of multithreaded codes, one of the options discussed under portability will be distributed-memory variations of the algorithms.
-\item Scalability
-\subitem Because the number of cores will only increase as time passes, your concurrent applications should be effective on a wide range of numbers of threads and cores, and sizes of data sets. Scalability refers to what you should expect with regard to how a given concurrent algorithm will behave with changes in the number of cores or size of data sets.
+\item Provide a commentary on prototype and relevant research undertaken
+\item Investigate and document the steps leading to the creation of a parallel algorithm.
+\item Produce code implementations of the Game of Life in various multi-threading packages
+\item Produce an analysis using quantitative and qualitative methods
 \end{itemize}
+\subsection{Core Values}
+\begin{itemize}
+\item {\bf Efficiency} A parallel program must run quickly and make good use of processing resources, that's the whole point! Efficiency will not only examine the speed of an implementation with respect to other implementations but also the overall speed-up, the overheads associated with using certain package directives to make code run correctly, the organisation of the code and how a different structure might perform more quickly or slowly, how compiler optimisation (if it's available) effects performance, and any other issues that present themselves.
+%\subitem Concurrent applications must run quickly and make good use of processing resources. With regard to a concurrent algorithm, efficiency will examine the overhead computations that must be added to ensure a correct execution, how alternative arrangements of threads or organizations of tasks might work better or worse, and what other problems there could be with the performance of the threaded application.
+\item {\bf Simplicity} A simple algorithm is one that is easy to develop, debug, verify, maintain and extend. This value will investigate how much code has had to be added to ensure proper parallel execution over the sequential version. Also, how much of the initial code structure remains? 
+%\subitem The simpler a concurrent algorithm is, the easier it will be to develop, debug, verify, and maintain. In terms of concurrent code based on a serial version, discussions of simplicity will focus on how much extra code you have to add to achieve a concurrent solution and how much of the original structure of the serial algorithm remains.
+\item {\bf Portability} How easy is it to move from one model to another? Using C code as a base, how hard is it to re-use existing algorithms and create a second implementation. Do the multi-threading directives translate easily? The degree to which a algorithm is ambiguous with another will describe how portable it is in that context.
+%\subitem Portability discussions will examine the tradeoffs that could encountered if you used a different threading model from the implemented design. While this book is primarily dedicated to the design and exploration of multithreaded codes, one of the options discussed under portability will be distributed-memory variations of the algorithms.
+\item {\bf Scalability} Technology is evolving, the number of processors in computers is only going to increase in the future. How scalable is the code produced? Does the addition of more threads provide a continual speed-up in line with the number of independent processors on a machine? If the size of the data set increases what's the overall effect on the programs execution? The degree to which an implementation can maintain a speed-up with the addition of increasing resources or workload will describe its scalability.
+%\subitem Because the number of cores will only increase as time passes, your concurrent applications should be effective on a wide range of numbers of threads and cores, and sizes of data sets. Scalability refers to what you should expect with regard to how a given concurrent algorithm will behave with changes in the number of cores or size of data sets.
+\end{itemize}
+\subsection{Required Knowledge}
+\subsection{Project Structure}
+The investigation begins with an in-depth discussion of cellular automata, in particular Conway's Game of Life. This is succeeded by a look at some of the main algorithms that make the game work, in sequential C. 
 \section{Background Research and Algorithm Design}
 \subsection{Life}
 Conway's Game of Life is an example of a {\bf cellular automaton} (CA). This is described \cite[Lesser, Wuensche, 1992 p6]{ref6} as a ``discrete dynamical system which evolves by the iteration of a simple deterministic rule''. When considering constructing a CA there are a few steps one has to follow:
@@ -403,7 +415,7 @@ The algorithm in {\it listing 5}, when implemented, will provide a facility for 
 \end{figure}
 \subsection{Threads}
 %Do I need to say this?
-This section will focus on the methods and implications of using threads. It is assumed that a basic definiton of the concept is already understood. Nevertheless I believe a definition is necessary for context. A {\bf thread} is a concurrently executable process unit with access to a {\bf shared memory} space. Being a {\it concurrent} component means that a thread is basically a sequential program by itself. A thread runs by calling functions from code that exists in its shared memory space. Threads are {\bf asynchronous} they run whenever they can, at different speeds, and at different times. Also they may be delayed, lock or even destroyed for reasons which can be hard to realise. \cite[p70]{ref13} 
+This section will focus on the methods and implications of using threads. Nevertheless I believe a definition is necessary for context. A {\bf thread} is a concurrently executable process unit with access to a {\bf shared memory} space. Being a {\it concurrent} component means that a thread is basically a sequential program by itself. A thread runs by calling functions from code that exists in its shared memory space. Threads are {\bf asynchronous} they run whenever they can, at different speeds, and at different times. They may be delayed, lock or even destroyed for reasons which can be hard to realise. \cite[p70]{ref13} 
 
 \subsubsection{Thread Creation}
 

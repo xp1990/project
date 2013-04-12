@@ -103,9 +103,9 @@ def updateGUI(grid):
         i = 0
     pygame.display.flip()
 
-dim = 192
+dim = 32
 x = initGrid()
-x = readFile(x, "192.dat")
+x = readFile(x, "32.dat")
 print("Read file complete")
 
 #GUI stuff
@@ -131,13 +131,14 @@ square = pygame.Surface((4, 4))
 
 
 #main game loop!
-for gen in range(10000):
+for gen in range(10):
     x = copyGhostCells(x)
     count_grid = countGrid(x)
     new_grid = evolve(count_grid, x)
-    if gen != 0:
-        x = new_grid
-    #print(gen, "complete", sumlist(new_grid))
+    #if gen != 0:
+    print(gen, "complete", sumlist(new_grid))
+    x = new_grid
+    
     updateGUI(new_grid)
     #outputFile(gen)
 

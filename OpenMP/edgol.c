@@ -7,7 +7,7 @@
 #include <stdbool.h>
 
 #define MAXGEN 10000
-#define DIM 1024
+#define DIM 32
 #define LIFE 3
 #define BOOL 0
 #define SEED 2012
@@ -15,7 +15,7 @@
 #define SHARED 1
 #define INLINE 1
 #define REGISTER 0
-#define FILENAME "1024.dat"
+#define FILENAME "32.dat"
 
 struct timespec begin, end;
 int cell_count, life_count;
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
                 **/
 
 				/*copy ghost columns to grid */
-                //#pragma parallel omp for - this works! however a speed up is not noticable?
+        //#pragma parallel omp for - this works! however a speed up is not noticable?
 				for (i = 1; i <= DIM; i++)
                 {
 					grid_ptr[i][DIM + 1] = grid_ptr[i][1];
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 
             #pragma omp barrier
 
-			if (gen != 0 && tid == 0)	//why?
+			if (tid == 0)	//why? fixed...ish
 			{
 				temp_ptr = grid_ptr;
 				grid_ptr = new_grid_ptr;
@@ -352,20 +352,19 @@ process(int **grid_ptr, int **new_grid_ptr, int start, int stop, int tid)
 			    grid_ptr[i][j + 1] + grid_ptr[i + 1][j - 1] +
 			    grid_ptr[i + 1][j] + grid_ptr[i + 1][j + 1];
 
-			//printf("%d",count);
-
-			if (count == 3 || (count == 2 && grid_ptr[i][j] == 1)) {
+			if (count == 3)
+      {
 				new_grid_ptr[i][j] = 1;
-
-				//printf("Thread %d creating life at %d,%d\n", tid, i, j);
-			} else if (count < 2 || count > 3) {
+			} 
+      else if (count < 2 || count > 3)
+      {
 				new_grid_ptr[i][j] = 0;
-				//printf("Thread %d: destroying life at %d,%d\n", tid, i, j);
-			} else if (count == 2) {
+			} 
+      else if (count == 2)
+      {
 				new_grid_ptr[i][j] = grid_ptr[i][j];
 			}
 		}
-		//printf("\n");
 	}
 }
 

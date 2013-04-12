@@ -234,9 +234,9 @@ class Grid
 public class GoL
 {
 
-    private static final int THREADS = 4, DIM = 1024, LIFE = 3, GEN = 10000;
+    private static final int THREADS = 4, DIM = 512, LIFE = 3, GEN = 1000;
 
-    private static final String FILENAME = "1024.dat";
+    private static final String FILENAME = "512.dat";
 
     public static void main(String args[])
     {
@@ -263,7 +263,6 @@ public class GoL
                 for(int x = 0; x < THREADS; x++)
                 {
                     life_vec.get(x).start();
-                    
                     //System.out.println("Thread: " + life_vec.get(x).getTid() + " at " + gen);
                     
                 }   
@@ -271,9 +270,11 @@ public class GoL
                 for(int x = 0; x < THREADS; x++)
                     life_vec.get(x).join();
                 
-                if(gen != 0) //Why?? No one knows!
-                    g1.finishGen();
-                
+                //if(gen != 0) //Why?? No one knows!
+                //System.out.println( "Gen: " + gen);
+                //g1.printGrid();
+                g1.finishGen();
+              
             }
             stopwatch.stop();
             

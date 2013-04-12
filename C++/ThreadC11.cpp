@@ -1,9 +1,9 @@
 #define VEC 0
 #define BOOL 1
-#define DIM 1024
+#define DIM 32
 #define MAXGEN 10000
 #define THREADS 4
-#define FD "1024.dat"
+#define FD "32.dat"
 
 #include <thread>
 #include "Grid.cpp"

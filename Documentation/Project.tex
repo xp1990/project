@@ -93,7 +93,19 @@
 \pagebreak
 \section{Abstract}
 \section{Introduction}
-\section{Background Research and Required Knowledge}
+Hello
+\subsection{Core Values}
+\begin{itemize}
+\item Efficiency
+\subitem Concurrent applications must run quickly and make good use of processing resources. With regard to a concurrent algorithm, efficiency will examine the overhead computations that must be added to ensure a correct execution, how alternative arrangements of threads or organizations of tasks might work better or worse, and what other problems there could be with the performance of the threaded application.
+\item Simplicity
+\subitem The simpler a concurrent algorithm is, the easier it will be to develop, debug, verify, and maintain. In terms of concurrent code based on a serial version, discussions of simplicity will focus on how much extra code you have to add to achieve a concurrent solution and how much of the original structure of the serial algorithm remains.
+\item Portability
+\subitem Portability discussions will examine the tradeoffs that could encountered if you used a different threading model from the implemented design. While this book is primarily dedicated to the design and exploration of multithreaded codes, one of the options discussed under portability will be distributed-memory variations of the algorithms.
+\item Scalability
+\subitem Because the number of cores will only increase as time passes, your concurrent applications should be effective on a wide range of numbers of threads and cores, and sizes of data sets. Scalability refers to what you should expect with regard to how a given concurrent algorithm will behave with changes in the number of cores or size of data sets.
+\end{itemize}
+\section{Background Research and Algorithm Design}
 \subsection{Life}
 %\begin{itemize}
 %\item The game at a glance
@@ -159,7 +171,7 @@ These laws are going to form the basis of the {\bf transition function} which wi
 \begin{mdframed}
 {\bf Extension Box:} There is a vast number of different algorithms that could be implemented. For example, Hashlife, quad-trees, linked-list, bit-stream... An extension could be researched into the relative performance of different algorithms in specific languages and the language features which benefit or hinder execution. My pseudo-algorithm will be outlined later on however I will be focusing on realising and defining parallel points in the program execution and discussing the syntax, semantics and effectiveness for respective implementations. 
 \end{mdframed} 
-\subsection{Prototype Code and Parallelism Research}
+\subsection{Prototype Code, Parallelism Research and Algorithm Development}
 %\begin{itemize}
 %\item refactoring the transitional function
 %\item Sequential C code?
@@ -326,31 +338,56 @@ void process(int **grid_ptr, int **new_grid_ptr)
 \end{figure}
 These blocks of code have helped me make some fairly crucial design decisions on my C and C++ versions and to a lesser extent my Java and Python versions. Earlier on I introduced the idea of a preprocessor macro and explained my use of them. This has helped me make two big design decisions. Firstly to use the function {\bf calloc} for allocating my array memory, and secondly to use the {\bf bool} import and data-type for the element attributes.
 \begin{itemize}
-\item {\bf Calloc} was chosen because, on a whim, I tried to validate the correctness of my code using two different programs for runtime analysis. {\bf Valgrind} and {\bf GProf}. Both programs reported runtime errors relating to the memory structures, during any type of access to my arrays. Evidence of the errors is in appendix A.2. Malloc seemed to be leaking and causing a large number of errors. One of which broke Linux indefinitely! After switching to calloc I had no such errors and the program ran correctly. Interestingly enough the results recorded from both the malloc version and the calloc version were the same the only difference was the memory leak. This error was still present even if the arrays were freed using the {\bf free(void*)} function.
-\item The {\bf bool} library was chosen because, apart from being the obvious choice, in that each cell in the automaton has only two states, alive or dead; but because it was 3\% faster in testing, consistently. My initial logic was that fetching a boolean value from memory, with a size of 1 byte, compared to a 4-byte integer, means that the boolean saves on clock cycles as it uses less bandwidth (however this depends on the size of the buses involved in each area of the execution pipeline; I'm assuming a 64-bit bus width and word size considering my architecture). At least that is what I thought. I did some research into how the assembler treats the use of bool versus an int and I produced a piece of code that attempts to perform an if-statement on a bool and an int. Then made the compiler produce the assembly code for an optimised version(it's easier to read than unoptimised assembly). The code tells us that the only difference between both functions f() and g() is the {\it cmpl} and {\it cmpb} assembly respectively. There is no difference between the function of these calls other than one only expects a byte as an argument {\it cmpb}(compare byte) and the other is a simple logical compare. Knowing this I tried to find out what values were passed into the registers and in a x86-64 architecture the whole of the general purpose register has to be used so the boolean value will be padded to fit in the GPR. So where do the performance benefits come from? This can be seen in the appendix A.3.
+\item {\bf Calloc} was chosen because, on a whim, I tried to validate the correctness of my code using two different programs for runtime analysis. {\bf Valgrind} and {\bf GProf}. Both programs reported runtime errors relating to the memory structures, during any type of access to my arrays. Evidence of the errors is in appendix A.3. Malloc seemed to be leaking and causing a large number of errors. One of which broke Linux indefinitely! After switching to calloc I had no such errors and the program ran correctly. Interestingly enough the results recorded from both the malloc version and the calloc version were the same the only difference was the memory leak. This error was still present even if the arrays were freed using the {\bf free(void*)} function.
+\item The {\bf bool} library was chosen because, apart from being the obvious choice, in that each cell in the automaton has only two states, alive or dead; but because it was 3\% faster in testing, consistently. My initial logic was that fetching a boolean value from memory, with a size of 1 byte, compared to a 4-byte integer, means that the boolean saves on clock cycles as it uses less bandwidth (however this depends on the size of the buses involved in each area of the execution pipeline; I'm assuming a 64-bit bus width and word size considering my architecture). At least that is what I thought. I did some research into how the assembler treats the use of bool versus an int and I produced a piece of code that attempts to perform an if-statement on a bool and an int. Then made the compiler produce the assembly code for an optimised version(it's easier to read than unoptimised assembly). The code tells us that the only difference between both functions f() and g() is the {\it cmpl} and {\it cmpb} assembly respectively. There is no difference between the function of these calls other than one only expects a byte as an argument {\it cmpb}(compare byte) and the other is a simple logical compare. Knowing this I tried to find out what values were passed into the registers and in a x86-64 architecture the whole of the general purpose register has to be used so the boolean value will be padded to fit in the GPR. So where do the performance benefits come from? This can be seen in the appendix A.4.
 \end{itemize}
 \subsubsection{A Thought Process for Parallelism}
-Why do we make code parallel? So we can increase the speed at which a process or program can execute, of course! There are three main levels of parallelism: {\bf instruction-level parallelism}, {\bf data parallelism}, and {\bf task parallelism}. Where instruction-level parallelism represents instruction pipelining, branch prediction, or super-scalar architectures \cite[Patterson, Hennessy, p41]{ref10}. Task parallelism is the concurrent processing of different tasks (or processes). Data parallelism, the beast that I am concerned with, is the decomposition of data into smaller blocks so that work can be carried out on them in parallel by separate processing units \cite[Patterson, Hennessy, A-17]{ref10}.\\
-
-When we begin to think about realising and adapting the program to run concurrently there are a few design processes and activities to consider before writing. {\bf Partitioning} involves dividing up the program into concurrent components then {\bf granularity} is adjusting the ratio of computation to communication for these parallel components and then {\bf mapping} this refactored design to computational units. \cite[p77,78]{ref9} A quantitative approach can be achieved by identifying code that {\bf can} be made parallel and code that {\bf can't} be made parallel. The application of this quantitative method is known as {\bf Amdahl's Law}. In the context of the prototype and the parallel code, this can be analysed by the amount of time an entire run of the program spends in the cell processing phase and the amount of time the program spends in the improved cell processing phase. 
-%convert code to time for the entirety of the programs rune rather than the processing only to successfully apply amdahl's law.
+Why do we make code parallel? So we can increase the speed at which a process or program can execute, of course! There are three main levels of parallelism: {\bf instruction-level parallelism}, {\bf data parallelism}, and {\bf task parallelism}. Where instruction-level parallelism represents instruction pipelining, branch prediction, or super-scalar architectures \cite[Patterson, Hennessy, p41]{ref10}. Task parallelism is the simultaneous processing of different tasks (or processes). Data parallelism, the beast that I am concerned with, is the decomposition of data into smaller blocks so that work can be carried out on them in parallel by separate processing units \cite[Patterson, Hennessy, A-17]{ref10}.
 \bigskip
 \begin{mdframed}
-{\bf Definition Box:} Amdahl's Law states that the performance enhancement possible with a given improvement (for instance: creating a parallel region from a serial region) is limited by the amount that the improved feature is used. \cite[Patterson, Hennessey, p51]{ref10}
-
+{\bf Knowledge Box:} It is important to make a distinction between {\bf parallelism} and {\bf concurrency} even though it is common to use the two terms interchangeably. Concurrency is about dealing with many things at once, whereas parallelism is about executing two or more things at the same time. In concurrently structured programs the design is not automatically parallel. A concurrent task is one that is independent and {\bf concurrent decomposition} deals with breaking a program into pieces that can be executed independently.  Concurrently structured code can be parallel! Although if it is parallel it is a symptom of the environment and not necessarily the code produced. An example of this would be that single-core processors can run code in a concurrent manner, or in a way that may seem parallel even though it is not. \cite{ref12} Thus it is correct to say that parallelism is a subset of concurrency. 
 \end{mdframed}
+\bigskip
+When we begin to think about realising and adapting the program to run in a parallel manner there are a few design processes and activities to consider before writing. {\bf Partitioning} involves dividing up the program into components that will allow parallelism then {\bf granularity} is adjusting the ratio of computation to communication for these parallel components and then {\bf mapping} this refactored design to computational units. \cite[p77,78]{ref9} A quantitative approach can be achieved by identifying code that {\bf can} be made parallel and code that {\bf can't} be made parallel. The application of this quantitative method is known as {\bf Amdahl's Law}. In the context of the prototype, a prediction on speed-up can be made my analysing the amount of time an entire run of the program spends in the cell processing phase and the amount of time the program spends executing code that can only ever be sequential.
+\bigskip
+\begin{mdframed}
+{\bf Knowledge Box:} Amdahl's Law states that the performance enhancement possible with a given improvement (for instance: creating a parallel region from a serial region) is limited by the amount that the improved feature is used. \cite[Patterson, Hennessey, p51]{ref10}\\ The formula for calculating a speed-up S for N processors can be explained by:\bigskip
+
+\centerline{$ S(N) = \frac{1}{(1-P) + \frac{P}{N}} $}
+\smallskip
+Where {\bf P} is the proportion of code that is subject to improvement and can be made parallel.
+\end{mdframed}
+\bigskip
+An analysis of the sequential code using the GNU runtime profiler {\bf Gprof}, shows the amount of time the program spent executing in each function. The call-graph can be a little hard to look at and interpret so I have shown the flat profile in {\it figure 7}. It should be noted that the code has been refactored so that each function represents only one task. This, whilst also being good programming practice, is necessary for Gprof to give a more detailed output. A full listing of the sequential code can be found in appendix A.1 and the full Gprof output in appendix A.2. The function {\bf process()} will produce the function calls {\bf getCount()} and {\bf applyRule()}. The parameters for this execution of the simulation are 100 generations with a 1024 square grid. This can be observed in the {\bf calls} column where the process function has 100 calls (1 per generation) and both getCount and applyRule have 104857600 calls; 1048576 cells in the grid, 100 times. Gprof reported the time of execution at 4.51 seconds whilst the timing feature imported from {\it lrt} (or libRealTime) reported 4.967. This disparity is normal when profiling code and luckily enough the difference isn't drastic enough to warrant any concern.\\
+\begin{figure}[h]
+\caption{Gprof Flat Profile from seqGoL.c}
+\begin{verbatim}Each sample counts as 0.01 seconds.
+
+  %   cumulative   self                self     total           
+ time   seconds   seconds    calls    ms/call  ms/call  name    
+
+ 56.47      1.98     1.98 104857600    0.00     0.00    getCount
+ 29.95      3.02     1.05 104857600    0.00     0.00    applyRule
+ 12.90      3.48     0.45      100     4.51    34.76    process
+  0.57      3.50     0.02        1    20.06    20.06    fillRand
+  0.29      3.51     0.01        2     5.02     5.02    printGrid
+  0.00      3.51     0.00      100     0.00     0.00    copyGhostCells
+  0.00      3.51     0.00        1     0.00     0.00    init
+\end{verbatim}
+\end{figure}
+
+From this data an attempt can be made to calculate the expected speed-up for different numbers of processors. Using the values in the {\bf \% time} column of the table one can estimate a value for {\bf P} the proportion of code that can be made parallel. However, it should be noted that when converting a sequential algorithm to a parallel one it is normal for the {\bf problem size} to increase. In this context, this means the addition of scheduling and synchronisation algorithms. This will be covered later in more detail in section 5.1.
 \subsubsection*{Partitioning}
-Our main concerns here are the ability to maintain {\bf scalability} and {\bf hide latency} when the program is run in a parallel manner. Where scalability refers to the measure of increased performance for an increased number of computational units. And hiding latency is the extent to which the overheads created by an increase of communication and code are hidden by an overall speedup and increased processing power (by utilising multi-core or multi-computer architectures). \cite[p78,79]{ref9} To address the issues of scalability and latency the initial workload will be {\bf decomposed} into a number of partitions less than or equal to the number of computational units available.\\
+The main concerns here are the ability to maintain {\bf scalability} and {\bf hide latency} when the program is run in a parallel manner. Where scalability refers to the measure of increased performance for an increased number of computational units. And hiding latency is the extent to which the overheads created by an increase of communication and code are hidden by an overall speed-up and increased processing power (by utilising multi-core or multi-computer architectures). \cite[p78,79]{ref9} To address the issues of scalability and latency the initial workload will be {\bf decomposed} into a number of partitions less than or equal to the number of computational units available.\\
 %something is wrong with the formatting if this line is removed?
-
 \begin{mdframed}
-{\bf Example Box:} When talking about hiding latency the concept usually refers to the down-time a processing unit may encounter when it has finished its work or is waiting for information. This is talked about in a more relevant context later in another section. Here, however, I am referencing the overheads created by that actual inclusion of code that makes concurrency possible. For example, the calculation of the amount of work to schedule each processing unit and the time spent waiting for synchronisation increase overall program latency as it has the possibility of increasing the down-time of a processing unit. 
+{\bf Example Box:} When talking about hiding latency the concept usually refers to the down-time a processing unit may encounter when it has finished its work or is waiting for information. This is talked about in a more relevant context later in the next section. Here, however, I am referencing the overheads created by that actual inclusion of code that makes parallelism possible. For example, the calculation of the amount of work to schedule each processing unit and the time spent waiting for synchronisation increase overall program latency as it has the possibility of increasing the down-time of a thread or processing unit.
 \end{mdframed}
 \bigskip
-How do we begin to partition the problem into concurrently executable code? The answer is {\bf domain decomposition}! This involves dividing up the data of the program so that it can be executed concurrently. My most prominent data structure is the set of two-dimensional arrays, one that is read from by the program and one that is written to. So, in the context of Conway's Game of Life, this would mean dividing up the array representing the global state into smaller arrays or {\bf chunks} to signify the work for each individual processing unit to compute. In this case the transitional function could be applied by independent computational units on their respective workloads which have been calculated by decomposing the data domain. However, this highlights the issue of {\bf problem scaling} where the number and size of the chunks created during the partitioning process should be proportionate to the amount of available processing units. This is so to maintain and maximise the performance improvements from parallelising the work. This can be seen in {\it figure 7} where an eighteen-by-eighteen grid representing the global state and ghost cells is decomposed to show the work taken out by individual computational units.
+How do we begin to partition the problem into parallel code? The answer is {\bf domain decomposition}! This involves dividing up the data of the program so that it can be executed in a parallel manner. My most prominent data structure is the set of two-dimensional arrays, one that is read from by the program and one that is written to. So, in the context of Conway's Game of Life, this would mean dividing up the array representing the global state into smaller arrays or {\bf chunks} to signify the work for each individual processing unit to compute. In this case the transitional function could be applied by independent computational units on their respective workloads which have been calculated by decomposing the data domain. However, this highlights the issue of {\bf problem scaling} where the number and size of the chunks created during the partitioning process should be proportionate to the amount of available processing units. This is so to maintain and maximise the performance improvements from parallelising the work. This can be seen in {\it figure 8} where an eighteen-by-eighteen grid representing the global state and ghost cells is decomposed to show the work taken out by individual computational units.
 \bigskip
 \begin{mdframed}
-{\bf Knowledge Box:} As well as {\bf domain decomposition} there exists concepts of {\bf functional decomposition} and {\bf irregular problem decomposition}. Functional decomposition 
+{\bf Knowledge Box:} As well as {\bf domain decomposition} there exists concepts of {\bf functional decomposition} and {\bf irregular problem decomposition}. Functional decomposition involves decomposing the function of the problem as opposed to the data. Irregular problem decomposition refers to when the program structure cannot be determined before runtime. This could be caused by a dependency to input data.\cite[p85]{ref9}
 \end{mdframed}
 \begin{figure}[h]
 \centering
@@ -358,138 +395,277 @@ How do we begin to partition the problem into concurrently executable code? The 
 \caption{The Global state and how it might be partitioned to support parallel processing}
 \label{fig: Para1}
 \end{figure}
+\subsection*{Granularity}
+Granularity is about adjusting the ratio of {\bf communication} to {\bf computation} and it heavily influences the choice of data structure for a parallel implementation. Increasing the locality of the data structures increases the ratio of computation to communication. In a less abstract sense, by separating the input and output data arrays more computation can be completed as less communication is needed by the computational units to arrange synchronisation. This is achieved through using two arrays; one to hold the current global state and one to hold the future global state. The trade off in increased memory usage is worth it considering the speed up.\cite[p87]{ref9}
+\subsection*{Mapping}
+Mapping is the process of assigning components to computational units for execution. It is the final step in creating the parallel algorithm and it brings together all of the processes completed so far. There are many different methods for successfully mapping and I am going to talk about, and ultimately implement, a method of mapping known as {\bf indexing}.
 
-
+Indexing is most commonly used in domain and functional decompositions and makes use of indexes obtained from the partitioning process to assign work to processing units. In the context of Conway's Game of Life, {\it figure 8} describes how the global state array may be partitioned to allow parallel processing. If each of these partitions is assigned a number representing the index of the thread which is going to be dealing with it then an algorithm can be deduced which begins to describe different work allocations. This is described in {\it listing 5} and written in pseudo code. The {\bf start} and {\bf stop} values refer to global state array indices, the {\bf id} value to the Identifier or index of the computational unit, the thread to which the work is assigned, and {\bf numberOfThreads} the desired level of partitioning and number of computational units to define.
+\begin{lstlisting}[language=C, caption={Pseudo Domain Decomposition and Thread Mapping Algorithm}]
+for id = 0; id < numberOfThreads; id++
+    start = ((dimension / numberOfThreads) * id) + 1
+    stop = (dimension / numberOfThreads) + start - 1
+    createThread(id, start, stop)
+\end{lstlisting}
+The algorithm in {\it listing 5}, when implemented, will provide a facility for decomposing the global state into {\bf partitions} that are assigned {\bf indexes} which are {\bf mapped} to their appropriate computational unit. Using this information, along with the previous version of the activity diagram for the sequential algorithm, it is possible to redefine the diagram with a control flow that resembles the complete Game of Life parallel algorithm. This is seen in {\it figure 9}. Notice the inclusion of a new process {\bf Schedule work based on number of threads}, this refers to the code in {\it listing 5}. Also visible are two black bars referred to as {\bf fork} and {\bf join}, these keywords and the symbols shown here refer to the synchronisation that has to take place to ensure the algorithm runs without fault and will be explained in full in the next section.
+\smallskip
+\begin{mdframed}
+{\bf Extension Box:} It is worth noting that the described method of work allocation is known as {\bf static}. In that, the allocation of work to the threads does not change after its initial assignment. There is a concept of {\bf dynamic} work allocation that could also be implemented by the simulation. This could involve an implementation of a work stealing algorithm whereby, if a thread has finished its initially allocated work load, it could steal work off another thread that is still executing. As interesting and challenging as this would be I feel it is out of scope of the project as my main goal is to compare and contrast the implementations of different multi-threading languages and libraries.
+\end{mdframed}
+\begin{figure}[h]
+\caption{A Level 0 Activity Diagram of the parallel Game of Life Algorithm}
+\centering
+\includegraphics[scale=0.5]{parallel0.png}
+\end{figure}
 \subsection{Threads}
-\begin{itemize}
-\item Von Neumann architecture
-\subitem Von Neumann bottleneck?
-\item Harvard Architecture
-\subitem differences? Bottlnecks?
-\item Sequential vs. Threaded
-\item Common issues: Consumer-Producer, Cooperation, Race condition, dead lock, live lock.
-\item What would happen if we didn't have the synchronisation directives in the code?
-\item System kernel? How this effects the handling of threads.
-\item Introduction to packages/languages that will be used.
-\subitem Briefly explain the differences, look (very quickly) at some syntax.
-\item sleep why is this bad?
-\item thread states. ready. executing. dead. etc... HOW THE SYSTEM HANDLES THEM!
-\subitem how does (generically) a language interface with a systems threads?
-\item more needs to be here!
-\end{itemize}
-\section{Languages, Compilers, and Interpreters}
-\begin{itemize}
-\item OpenMP and Boost and the appropriateness for different programming paradigms. Look into c++11!!!
-\item Interesting point: TeX the package used to create documents is a form of compilation.
-\item Introduce the languages more formally.
-\subitem Is history necessary here? Java history is quite interesting. 
-\subitem C99 not supported in windows. Worth mentioning?
-\subitem Language type (Functional, procedural/imperative, OO)
-\subitem Language features (typing, inheritance, classes, shared objects, evaluation, verbosity)
-\item Explain the difference between a compiler and an interpreter (don't forget JIT). 
-\subitem Maybe do this during the language introduction? 
-\subitem Highlight which language uses which.
-\subitem Mention optimisation, take a quick look at some of the C features that offer this (even the deprecated ones: register etc...)
-\subitem how do interpreters handle optimisation?
-\subitem how can they ever keep up with compiled languages?
-\item Recommendations based on research
-\subitem Is there one language that offers everything?
-\subitem Could a desirable feature be made available to another language/library at little cost?
-\end{itemize}
-\section{Implementation}
-\begin{itemize}
-\item Challenges and appropriateness for implementation
-\subitem How the programming paradigm (proc, oop, functional){\bf affects the life implementation?} Mainly mention limitations here! (In haskell we can do X, but in C we can do Y blah blah...) Mention typing, inheritance, evaluation, verbosity, classes, shared objects...etc...
-\subitem Memory structures? (quad tree, sequential bits, OOP, struct linked list)
-\subitem Processing methods (sequential, threaded, more threads, less threads, thread communication?)
-\subitem FOR ALL OF THESE MENTION LIMITATIONS AND BENEFITS!
-\item Pseudo-Code (both sequential and threaded)
-\item UML (both sequential and threaded)
-\subitem state diagram showing generation processes
-\subitem class diagram for OOP models
-\subitem SEQUENCE diagram!! Useful for showing method calls and generation order. Couple with state Diagram
-\item Validation technique
-\subitem Functional model (Possible haskell, lisp, clojure, ML, Maybe even SaC?!?)
-\subitem Original seed grid
-\item Program variables!
-\subitem How will this effect runtime performance?
-\item The Abstract pseudo Algorithm!!
-\subitem ``Basic Explanation.txt''
-\end{itemize}
-\subsection{C with OpenMP}
-\begin{itemize}
-\item Language features
-\subitem Register
-\subitem Inline
-\subitem Optimizer compiler
-\subitem Precompiler macros
-\item Library features
-\subitem atomic
-\subitem barrier
-\subitem master (same as tid == 0)
-\subitem single (different to tid == 0, one thread only!)
-\subitem parallel
-\subitem for (how could this change the code??)
-\subitem ordered
-\item POI!! Implementing different library directives changes the results drastically.... Why?! Look into trace thread? correction...Linux Trace Tool Kit
-\item Does it conform to the abstract routine?
-\item shared memory versus private memory implementation. Problems? Results? Terribleness! Include code. EVIDENCE!!
-\item Amdahl's Law with GProf
-\end{itemize} 
+%Do I need to say this?
+This section will focus on the methods and implications of using threads. It is assumed that a basic definiton of the concept is already understood. Nevertheless I believe a definition is necessary for context. A {\bf thread} is a concurrently executable process unit with access to a {\bf shared memory} space. Being a {\it concurrent} component means that a thread is basically a sequential program by itself. A thread runs by calling functions from code that exists in its shared memory space. Threads are {\bf asynchronous} they run whenever they can, at different speeds, and at different times. Also they may be delayed, lock or even destroyed for reasons which can be hard to realise. \cite[p70]{ref13} 
 
-OpenMP is an ``API specification for parallel programming'' ... \cite{ref3}
+\subsubsection{Thread Creation}
+
+
+%\item Von Neumann architecture
+%\subitem Von Neumann bottleneck?
+%\item Harvard Architecture
+%\subitem differences? Bottlnecks?
+%\item Sequential vs. Threaded
+%\item Common issues: Consumer-Producer, Cooperation, Race condition, dead lock, live lock.
+%\item What would happen if we didn't have the synchronisation directives in the code?
+%\item System kernel? How this effects the handling of threads.
+%\item Introduction to packages/languages that will be used.
+%\subitem Briefly explain the differences, look (very quickly) at some syntax.
+%\item sleep why is this bad?
+%\item thread states. ready. executing. dead. etc... HOW THE SYSTEM HANDLES THEM!
+%\subitem how does (generically) a language interface with a systems threads?
+%\subitem how does join work?!
+%\item more needs to be here!
+
+\section{Languages, Compilers, and Interpreters}
+
+%\item OpenMP and Boost and the appropriateness for different programming paradigms. Look into c++11!!!
+%\item Interesting point: TeX the package used to create documents is a form of compilation.
+%\item Introduce the languages more formally.
+%\subitem Is history necessary here? Java history is quite interesting. 
+%\subitem C99 not supported in windows. Worth mentioning?
+%\subitem Language type (Functional, procedural/imperative, OO)
+%\subitem Language features (typing, inheritance, classes, shared objects, evaluation, verbosity)
+%\item Explain the difference between a compiler and an interpreter (don't forget JIT). 
+%\subitem Maybe do this during the language introduction? 
+%\subitem Highlight which language uses which.
+%\subitem Mention optimisation, take a quick look at some of the C features that offer this (even the deprecated ones: register etc...)
+%\subitem how do interpreters handle optimisation?
+%\subitem how can they ever keep up with compiled languages?
+%\item Recommendations based on research
+%\subitem Is there one language that offers everything?
+%\subitem Could a desirable feature be made available to another language/library at little cost?
+
+\section{Implementation}
+
+%\item Challenges and appropriateness for implementation
+%\subitem How the programming paradigm (proc, oop, functional){\bf affects the life implementation?} Mainly mention limitations here! (In haskell we can do X, but in C we can do Y blah blah...) Mention typing, inheritance, evaluation, verbosity, classes, shared objects...etc...
+%\subitem Memory structures? (quad tree, sequential bits, OOP, struct linked list)
+%\subitem Processing methods (sequential, threaded, more threads, less threads, thread communication?)
+%\subitem FOR ALL OF THESE MENTION LIMITATIONS AND BENEFITS!
+%\item Pseudo-Code (both sequential and threaded)
+%\item UML (both sequential and threaded)
+%\subitem state diagram showing generation processes
+%\subitem class diagram for OOP models
+%\subitem SEQUENCE diagram!! Useful for showing method calls and generation order. Couple with state Diagram
+%\item Validation technique
+%\subitem Functional model (Possible haskell, lisp, clojure, ML, Maybe even SaC?!?)
+%\subitem Original seed grid
+%\item Program variables!
+%\subitem How will this effect runtime performance?
+%\item The Abstract pseudo Algorithm!!
+%\subitem ``Basic Explanation.txt''
+
+\subsection{C with OpenMP}
+
+%\item Language features
+%\subitem Register
+%\subitem Inline
+%\subitem Optimizer compiler
+%\subitem Precompiler macros
+%\item Library features
+%\subitem atomic
+%\subitem barrier
+%\subitem master (same as tid == 0)
+%\subitem single (different to tid == 0, one thread only!)
+%\subitem parallel
+%\subitem for (how could this change the code??)
+%\subitem ordered
+%\item POI!! Implementing different library directives changes the results drastically.... Why?! Look into trace thread? correction...Linux Trace Tool Kit
+%\item Does it conform to the abstract routine?
+%\item shared memory versus private memory implementation. Problems? Results? Terribleness! Include code. EVIDENCE!!
+%\item Amdahl's Law with GProf
+%\item EXPAND ON RESEARCH SECTION!!!
+
+
+%OpenMP is an ``API specification for parallel programming'' ... \cite{ref3}
 
 \subsection{C with PThreads}
 \subsection{C++ with Boost}
 \subsection{Java with Threads}
-\begin{itemize}
-\item gcj and javac
-\item fork, join, yield, sleep
-\item Overheads? Thread creation - compare to C
-\item OOP? Threads as an object?
-\end{itemize}
+%\item gcj and javac
+%\item fork, join, yield, sleep
+%\item Overheads? Thread creation - compare to C
+%\item OOP? Threads as an object?
 \subsection{Pyhton}
-\begin{itemize}
-\item List comprehension
-\item Parallel processing?
-\item parallel applications of Map, Reduce, and List Comprehension? Can it be done? Reference Parallel Computing: Architectures, Algorithms, and Applications, C. Bischof et al (Eds.) P203 Implementing Data-Parallel Patterns for Shared Memory with OpenMP GOOD ARTICLE!
-\item The other paradigm? Fetching a 3x3 block of cells. Processing them, return the result... 
-\end{itemize}
+
+%\item List comprehension
+%\item Parallel processing?
+%\item parallel applications of Map, Reduce, and List Comprehension? Can it be done? Reference Parallel Computing: Architectures, Algorithms, and Applications, C. Bischof et al (Eds.) P203 Implementing Data-Parallel Patterns for Shared Memory with OpenMP GOOD ARTICLE!
+%\item The other paradigm? Fetching a 3x3 block of cells. Processing them, return the result... 
+
 \subsection{C with CUDA}
 \section{Analysis}
 \subsection{Problems}
-\begin{itemize}
-\item Should this really be here? It should really be rounded up in each subheading...
-\item Optimisations compiler results mess up
-\item Functional model learning curve and paradigm shift. 
-\item Python - Using functional techniques.
-\end{itemize}
+
+%\item Should this really be here? It should really be rounded up in each subheading...
+%\item Optimisations compiler results mess up
+%\item Functional model learning curve and paradigm shift. 
+%\item Python - Using functional techniques.
+
 \subsection{Syntax and Semantics}
 \subsection{Ease of use}
 \subsection{Features}
 \subsection{Performance}
 \subsection{Extensions}
-\begin{itemize}
-\item Using OOP to recognize patterns and predict movement. I.e. Gliders and inverters.
-\end{itemize}
+
+%\item Using OOP to recognize patterns and predict movement. I.e. Gliders and inverters.
+
 \section{Conclusion}
-Some sort of choice based on the most appropriate language.
+%Some sort of choice based on the most appropriate language.
 \section{Bibliography and References}
-\nocite{ref1}
-\nocite{ref2}
-\nocite{ref4}
-\nocite{ref5}
-\nocite{ref6}
+\nocite{*}
 \bibliographystyle{unsrt}
 \bibliography{Project.bib}
 \appendix
+\pagebreak
 \section{Appendices}
 \subsection{Sequential C Implementation}
 \lstinputlisting[language=C]{../Sequential/seqGoL.c}
-\subsection{Valgrind and GProf output}
+\pagebreak
+\subsection{OpenMP C Implementation}
+\lstinputlisting[language=C]{../OpenMP/edgol.c}
+\pagebreak
+\subsection{C++ 11 Implementation}
+\lstinputlisting[language=C++]{../C++/ThreadC11.cpp}
+\pagebreak
+\subsection{C++ Boost Threads Implementation}
+\lstinputlisting[language=C++]{../C++/Thread.cpp}
+\pagebreak
+\subsection{C++ Grid Class Implementation}
+\lstinputlisting[language=C++]{../C++/Grid.cpp}
+\pagebreak
+\subsection{Java Threads Implementation}
+\lstinputlisting[language=Java]{../Java/GoL.java}
+\pagebreak
+\subsection{Python Functional Implementation}
+\lstinputlisting[language=Python]{../Pyhton/GoL.py}
+\pagebreak
+\subsection{Go with Go Routines Implementation}
+\lstinputlisting[language=C]{../Go/GoL.go}
+\pagebreak
+\subsection{Flat Profile and Call-Graph for seqGoL.c using runtime profiler Gprof}
+\begingroup
+\fontsize{10pt}{8pt}
+\begin{verbatim}
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 56.47      1.98     1.98 104857600     0.00     0.00  getCount
+ 29.95      3.02     1.05 104857600     0.00     0.00  applyRule
+ 12.90      3.48     0.45      100     4.51    34.76  process
+  0.57      3.50     0.02        1    20.06    20.06  fillRand
+  0.29      3.51     0.01        2     5.02     5.02  printGrid
+  0.00      3.51     0.00      100     0.00     0.00  copyGhostCells
+  0.00      3.51     0.00        1     0.00     0.00  init
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 0.29% of 3.51 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]    100.0    0.00    3.51                 main [1]
+                0.45    3.02     100/100         process [2]
+                0.02    0.00       1/1           fillRand [5]
+                0.01    0.00       2/2           printGrid [6]
+                0.00    0.00     100/100         copyGhostCells [7]
+                0.00    0.00       1/1           init [8]
+-----------------------------------------------
+                0.45    3.02     100/100         main [1]
+[2]     99.1    0.45    3.02     100         process [2]
+                1.98    0.00 104857600/104857600     getCount [3]
+                1.05    0.00 104857600/104857600     applyRule [4]
+-----------------------------------------------
+                1.98    0.00 104857600/104857600     process [2]
+[3]     56.4    1.98    0.00 104857600         getCount [3]
+-----------------------------------------------
+                1.05    0.00 104857600/104857600     process [2]
+[4]     29.9    1.05    0.00 104857600         applyRule [4]
+-----------------------------------------------
+                0.02    0.00       1/1           main [1]
+[5]      0.6    0.02    0.00       1         fillRand [5]
+-----------------------------------------------
+                0.01    0.00       2/2           main [1]
+[6]      0.3    0.01    0.00       2         printGrid [6]
+-----------------------------------------------
+                0.00    0.00     100/100         main [1]
+[7]      0.0    0.00    0.00     100         copyGhostCells [7]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[8]      0.0    0.00    0.00       1         init [8]
+-----------------------------------------------
+
+Index by function name
+
+   [4] applyRule               [3] getCount                [2] process
+   [7] copyGhostCells          [8] init
+   [5] fillRand                [6] printGrid
+
+\end{verbatim}
+\endgroup
+\pagebreak
+\subsection{Valgrind output}
 \includegraphics[scale=0.5]{valgrind1.png}\\
 \includegraphics[scale=0.5]{valgrind2.png}
+\pagebreak
 \subsection{Bool and Int research with C file and ASM file}
 \lstinputlisting[language=C]{../Sequential/boolInt.c}
-\lstinputlisting[language={[x86masm]Assembler},caption={Fully Optimised C Assembly code}]{../Sequential/boolInt.s}
+\lstinputlisting[language={[x86masm]Assembler}]
+{../Sequential/boolInt.s}
+\pagebreak
 \end{document}

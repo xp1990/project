@@ -13,9 +13,9 @@
 % See the LaTeX Companion or other references for full information.
 
 %%% PAGE DIMENSIONS
-\usepackage{geometry} % to change the page dimensions
+\usepackage[top=2.5cm,bottom=2.5cm,right=2.5cm,left=4cm]{geometry} % to change the page dimensions
 \geometry{a4paper} % or letterpaper (US) or a5paper or....
- \geometry{margin=0.5in} % for example, change the margins to 2 inches all round
+ %\geometry{margin=0.5in} % for example, change the margins to 2 inches all round
 % \geometry{landscape} % set up the page for landscape
 %   read geometry.pdf for detailed page layout information
 \usepackage{graphicx} % support the \includegraphics command and options
@@ -93,8 +93,14 @@
 \pagebreak
 \section{Abstract}
 \section{Introduction}
-Hello
+
+\subsection{Motivation}
+
+\subsection{Aim}
+\subsection{Objectives}
+
 \subsection{Core Values}
+\subsection{Project Structure}
 \begin{itemize}
 \item Efficiency
 \subitem Concurrent applications must run quickly and make good use of processing resources. With regard to a concurrent algorithm, efficiency will examine the overhead computations that must be added to ensure a correct execution, how alternative arrangements of threads or organizations of tasks might work better or worse, and what other problems there could be with the performance of the threaded application.
@@ -107,16 +113,6 @@ Hello
 \end{itemize}
 \section{Background Research and Algorithm Design}
 \subsection{Life}
-%\begin{itemize}
-%\item The game at a glance
-%\subitem Define a start state
-%\subitem Begin automata etc...
-%\subitem Moore-neighbourhood
-%\item What makes it so interesting?
-%\item Why code?
-%\subitem "The sheer number of different implementations of this game make it an extremely interesting case study, some languages may be better for one model than an another, an implementation may be possible in one language but not in another!(due to the available features)"
-%\end{itemize}
-
 Conway's Game of Life is an example of a {\bf cellular automaton} (CA). This is described \cite[Lesser, Wuensche, 1992 p6]{ref6} as a ``discrete dynamical system which evolves by the iteration of a simple deterministic rule''. When considering constructing a CA there are a few steps one has to follow:
 \begin{itemize}
 \item Firstly, consider that \emph{time is discrete} and progresses in steps, in this report I will mostly be referring to them as {\bf generations}. A term far more fitting for Conway's Game of Life. 
@@ -172,16 +168,6 @@ These laws are going to form the basis of the {\bf transition function} which wi
 {\bf Extension Box:} There is a vast number of different algorithms that could be implemented. For example, Hashlife, quad-trees, linked-list, bit-stream... An extension could be researched into the relative performance of different algorithms in specific languages and the language features which benefit or hinder execution. My pseudo-algorithm will be outlined later on however I will be focusing on realising and defining parallel points in the program execution and discussing the syntax, semantics and effectiveness for respective implementations. 
 \end{mdframed} 
 \subsection{Prototype Code, Parallelism Research and Algorithm Development}
-%\begin{itemize}
-%\item refactoring the transitional function
-%\item Sequential C code?
-%\subitem Mention results
-%\item Defining parallel points in execution 
-%\subitem Reference parallel programming book
-%\item Building the abstract pseudo-algorithm for sequential execution
-%\item Requirements elicitation? (It has to go somewhere!)
-%\subitem Functional and non-functional requirements of language
-
 A prototype sequential version of the Game of Life has been produced as part of my research into the algorithms available and memory structures I could have used. This version has been produced in C and can be broken down into a few abstract, yet simple, operations. This example is an illustration of one of the most basic of programming paradigms, {\bf sequential composition}. This is described by \cite[Chandry and Taylor, p68]{ref9} as when components are executed in order, one after the other. The composition terminates when the last component terminates. Considering components as individual sub-programs or functions in our C code. We can begin to see how the Game of Life may be executed sequentially. And quite slowly for that matter! Referencing {\it figure 4} we can see the {\bf sub-programs} or {\bf components} that make up the sequential algorithm for the Game of Life. I will talk about some of the more interesting and prominent snippets of code from this early implementation, however a full listing will be available, line-numbered and commented, in the appendix A.1.\\
 \begin{figure}[h]
 \centering
@@ -191,8 +177,6 @@ A prototype sequential version of the Game of Life has been produced as part of 
 \end{figure}
 \\This is the starting point for the entirety of the project. From this diagram I can get an overview of how one algorithm is different from another and construct new algorithms. By changing {\bf sub-programs}, by modifying {\bf program transitions}, and by delving deeper into {\bf components} and their constituents. The most important aspect of this diagram is going to be helping me realise and program the parallel regions of the automaton.
 \subsubsection{Refactoring the Components}
-%Explain code
-%Put other activity diagrams here!!
 {\it Figure 4} highlights that the first process in the Game of Life algorithm to take place is the allocating of memory for the array. Consistency across my code modules is paramount and {\bf DIM} references the chosen dimension of my game board. I need two identically sized blocks of memory to represent my two-dimensional grid. One for the current state, and one for the state of the next generation. As shown in {\it figure 4} at the end of an iteration of one generation the references to the grids are swapped, and the process repeats itself until {\bf MAXGEN} is reached. 
 \begin{mdframed}
 {\bf Knowledge Box:} The '{\bf \#}' symbol denotes a {\bf preprocessor macro}. I have used these extensively in my prototype code. It is a way of instructing the compiler, if certain conditions are met, which code to include or exclude from compilation. This is known as conditional compilation. It is especially useful, in the case highlighted below, when experimenting with different types as some blocks of code may stay the same however the prototypes or function declarations may change. Initially a {\bf macro} is defined at the top of the program and then tested in the main code block. This can be seen in appendix A.1 lines[12,13], lines[26-34], and lines[147-151].
@@ -458,6 +442,7 @@ This section will focus on the methods and implications of using threads. It is 
 %\item Recommendations based on research
 %\subitem Is there one language that offers everything?
 %\subitem Could a desirable feature be made available to another language/library at little cost?
+%\item Requirements elicitation? (It has to go somewhere!)
 
 \section{Implementation}
 
@@ -613,8 +598,6 @@ name       the name of the function.  This is the minor sort
 
 
 		     Call graph (explanation follows)
-
-
 granularity: each sample hit covers 2 byte(s) for 0.29% of 3.51 seconds
 
 index % time    self  children    called     name

@@ -285,7 +285,7 @@ However, in these loops we only care about the cells relating to the global stat
     }
     /*copy ghost rows to grid */
     for (i = 0; i <= DIM + 1; j++)
-    {
+    {signing and implementing parallel code, and the generic features of multi-thread capable libraries. A walk-through of the different code implementations and an analysis based on the {\bf core values} outlined 
         grid_ptr[0][i] = grid_ptr[DIM][i];
         grid_ptr[DIM + 1][i] = grid_ptr[1][i];
     }
@@ -392,7 +392,7 @@ How do we begin to partition the problem into parallel code? The answer is {\bf 
 \label{fig: Para1}
 \end{figure}
 \subsection*{Granularity}
-Granularity is about adjusting the ratio of {\bf communication} to {\bf computation} and it heavily influences the choice of data structure for a parallel implementation. Increasing the locality of the data structures increases the ratio of computation to communication. In a less abstract sense, by separating the input and output data arrays more computation can be completed as less communication is needed by the computational units to arrange synchronisation. This is achieved through using two arrays; one to hold the current global state and one to hold the future global state. The trade off in increased memory usage is worth it considering the speed up.\cite[p87]{ref9}
+Granularity is about adjusting the ratio of {\bf communication} to {\bf computation} and it heavily influences the choice of data structure for a parallel implementation. Increasing the locality of the data structures increases the ratio of computation to communication. In a less abstract sense, by separating the input and output data arrays more computation can be completed as less communication is needed by the computational units to arrange synchronisation. This is achieved through using two arrays; one to hold the current global state and one to hold the future global state. The trade off in increased memory usage is worth it considering the speed up.\cite[p87]{ref9} The current approach focuses on a {\bf coarse-grained} structure. Whereby the data sets worked on by each thread are as large as possible and are available through a shared resource that requires little to no communication to access. Imagine if the grid were divided into smaller chunks and each thread handled more of these smaller pieces. Whilst increasing the flexibility of the data processed we have also increased the overheads associated with processing. This {\bf fine-grained} solution will require more synchronisation between threads (imagine the recombining of the processed chunks) and ultimately be slower. In the context of Conway's Game of Life this issue is rarely visible; the components are decomposed to remain independent and so it is wise to process as much as possible to reduce communication and increase computation.
 \subsection*{Mapping}
 Mapping is the process of assigning components to computational units for execution. It is the final step in creating the parallel algorithm and it brings together all of the processes completed so far. There are many different methods for successfully mapping and I am going to talk about, and ultimately implement, a method of mapping known as {\bf indexing}.
 
@@ -406,18 +406,85 @@ for id = 0; id < numberOfThreads; id++
 The algorithm in {\it listing 5}, when implemented, will provide a facility for decomposing the global state into {\bf partitions} that are assigned {\bf indexes} which are {\bf mapped} to their appropriate computational unit. Using this information, along with the previous version of the activity diagram for the sequential algorithm, it is possible to redefine the diagram with a control flow that resembles the complete Game of Life parallel algorithm. This is seen in {\it figure 9}. Notice the inclusion of a new process {\bf Schedule work based on number of threads}, this refers to the code in {\it listing 5}. Also visible are two black bars referred to as {\bf fork} and {\bf join}, these keywords and the symbols shown here refer to the synchronisation that has to take place to ensure the algorithm runs without fault and will be explained in full in the next section.
 \smallskip
 \begin{mdframed}
-{\bf Extension Box:} It is worth noting that the described method of work allocation is known as {\bf static}. In that, the allocation of work to the threads does not change after its initial assignment. There is a concept of {\bf dynamic} work allocation that could also be implemented by the simulation. This could involve an implementation of a work stealing algorithm whereby, if a thread has finished its initially allocated work load, it could steal work off another thread that is still executing. As interesting and challenging as this would be I feel it is out of scope of the project as my main goal is to compare and contrast the implementations of different multi-threading languages and libraries.
+{\bf Extension Box:} It is worth noting that the described method of work allocation is known as {\bf static}. In that, the allocation of work to the threads does not change after its initial assignment. There is a concept of {\bf dynamic} work allocation that could also be implemented by the simulation. This could involve an implementation of a work stealing algorithm whereby, if a thread has finished its initially allocated work load, it could steal work off another thread that is still executing. In addition to this a dynamic work allocation algorithm would involve the adoption of a {\bf fine-grained} data structure and along with it the overheads of increased communication. As interesting and challenging as this would be I feel it is out of scope of the project as my main goal is to compare and contrast the implementations of different multi-threading languages and libraries.
 \end{mdframed}
 \begin{figure}[h]
 \caption{A Level 0 Activity Diagram of the parallel Game of Life Algorithm}
 \centering
-\includegraphics[scale=0.5]{parallel0.png}
+\includegraphics[scale=0.45]{parallel0.png}
 \end{figure}
 \subsection{Threads}
 %Do I need to say this?
 This section will focus on the methods and implications of using threads. Nevertheless I believe a definition is necessary for context. A {\bf thread} is a concurrently executable process unit with access to a {\bf shared memory} space. Being a {\it concurrent} component means that a thread is basically a sequential program by itself. A thread runs by calling functions from code that exists in its shared memory space. Threads are {\bf asynchronous} they run whenever they can, at different speeds, and at different times. They may be delayed, lock or even destroyed for reasons which can be hard to realise. \cite[p70]{ref13} 
 
 \subsubsection{Thread Creation}
+One of the aims of this investigation is to look at different types of threading solutions available at the moment. How could I begin any way other than to show a ``Hello World'' example, with a twist of course. For this small introduction I won't be talking about any thread package in a great detail, this is a focus on the different code structures that can arise from different threading strategies. {\it Listing 6} shows a simple C program, this much should be obvious, however there is the addition of 4 lines and a single block encased in curly braces which are providing the basic facility for threading. The first point of interest is line 1, this statement includes the header file for the OpenMP package. A very powerful {\bf implicit} threading API. Line 7 defines two variables one for storing the identifier of any created threads and {\it nthreads} that stores an integer referring to the number of threads for OpenMP to create. Line 8 is a compiler specific directive that indicates the fork point for the OpenMP package. At this point the OpenMP API will create a number of threads indicated by the {\it nthreads} integer, and each thread will have a private field {\it th\_id}. The successful execution of this directive now means that all the code in between the curly braces on lines 9 and 12 will be in a OpenMP parallel region. At this point {\it nthreads} are created and each one attempts to execute the code in the parallel region. The private field {\it th\_id} is used on line 10 where the OpenMP function {\bf omp\_get\_thread\_num()} assigns the threads identifier to the private field. This can be useful to create sequential regions inside parallel ones, however more on this later. The ultimate conclusion of this code is that each created thread executes the {\bf printf()} function on line 11. There you have it, 4 threads, 4 lines of output. Easy, right?
+\begin{lstlisting}[language=C, caption={Hello World from OpenMP}]
+#include <omp.h>
+#include <stdio.h>
+#include <stdlib.h>
+ 
+int main (int argc, char *argv[])
+{
+  int th_id, nthreads = 4;
+  #pragma omp parallel private(th_id) num_threads(nthreads)
+  {
+    th_id = omp_get_thread_num();
+    printf("Hello World from OMPthread %d\\n", th_id);
+  }
+  return EXIT_SUCCESS;
+}
+\end{lstlisting}
+\begin{verbatim}
+Hello World from OMPthread 0
+Hello World from OMPthread 2
+Hello World from OMPthread 1
+Hello World from OMPthread 3
+\end{verbatim}
+\subsubsection*{Explicit and Implicit Threading}
+That example may seem unnecessarily trivial however there is method in my madness. The explained code in {\it listing 6} is an example of a package which employs an {\bf implicit} threading model. This means that a lot of the creation and management of the threads (even sometimes the scheduling!) is hidden from the programmer to make the entire job a lot easier. The {\bf \#pragma} statement in {\it listing 6}, line 8 is a directive for the compiler to {\bf fork} a {\bf team} of threads. At the end of the parallel region, when all of the statements inside the curly braces have been executed by each individual thread, the team will {\bf join}. This pattern could be repeated over and over again in a single program. This style of parallel processing is known as the {\bf fork-join} model. This makes creating parallel regions extremely simple and, implemented in C, the performance is still better than most. However with increased simplicity the package loses its flexibility and expressiveness.\cite[p83]{ref14} The non-transparent nature of some of the directives in implicit threading packages create debugging extremely difficult; a situation could arise where the programmer simply doesn't know what is happening inside the parallel region!
+
+So, we want more control? {\bf Explicit} threading is the answer! It enables the programmer to control all aspects of the threads they intend to create. From creating a thread, assigning a function to it, synchronising a team, or controlling access to resources. {\it Listing 7} is an example of a explicit threading library, PThreads. It should be immediately apparent that the layout of this code is extremely different to that of the OpenMP example. First the programmer must create a field of type {\bf pthread\_t} this is the threads container (often known as the thread's {\bf handle}) and is used to create the thread, associate it with a function and refer to it in the main context of the program. The actual thread will begin running as soon as it is created by the {\bf pthread\_create()} function. This expects arguments referrring to the handle to initialise, optional thread attributes, the function to be assigned to the thread and any additional arguments in the form of void pointers. Already this is more complex than the implicit thread example yet the level of control the programmer has over threads and what they execute is far greater.  \cite[p89]{ref14} In the {\bf for} loop on line 19 each one of the pthread handles in the {\it threads} array are created and associated to the same function, PrintHello. The only thing that changes is the argument, a void pointer to an integer referencing the identifier of the thread. Unlike OpenMP this is not explicitly defined by the API, in PThreads an identifier exists only if the programmer wishes it to. After this point the team of threads each execute the code inside the PrintHello function and are destroyed by the {\it pthread\_exit()} function. 
+
+The obvious trade-off for increased flexibility is the increased complexity of the code. Also, a big difference to note between both models is the range of functionalities offered. You may notice that unlike the implicit example, there is no facility in explicit threading libraries to simply {\it create} a parallel region. Functions are assigned, parameters are passed, in this maelstrom of handles, threads, parallel regions and functions how is everything synchronised? How can everything possibly run smoothly? 
+%delegation and inheritance. OOP vs. Sequential. 
+\begin{lstlisting}[language=C, caption={Hello World from PThreads}]
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define NUM_THREADS	4
+
+void *PrintHello(void *threadid)
+{
+   long tid;
+   tid = (long)threadid;
+   printf("Hello World from pthread %ld\n", tid);
+   pthread_exit(NULL);
+}
+
+int main(int argc, char *argv[])
+{
+   pthread_t threads[NUM_THREADS];
+   long t;
+   for(t=0;t<NUM_THREADS;t++)
+   {
+     pthread_create(&threads[t], NULL, PrintHello, (void *)t);
+   }
+   
+   pthread_exit(NULL);
+}
+\end{lstlisting}
+\begin{verbatim}
+Hello World from pthread 0
+Hello World from pthread 1
+Hello World from pthread 2
+Hello World from pthread 3
+\end{verbatim}
+\subsubsection{Synchronisation}
+The art of coordinating simultaneous threads of execution. At its simplest it involves gathering a team of threads at a point in the program before they are allowed to proceed. This practice is known as a {\bf join} function. 
+%explain join
+%join = barrier?
+\subsubsection{Getting into Trouble}
 
 
 %\item Von Neumann architecture
@@ -436,7 +503,10 @@ This section will focus on the methods and implications of using threads. Nevert
 %\subitem how does join work?!
 %\item more needs to be here!
 
-\section{Languages, Compilers, and Interpreters}
+%\section{Languages, Compilers, and Interpreters}
+
+
+%skip this!?!?!?!?! DEFINITELY!
 
 %\item OpenMP and Boost and the appropriateness for different programming paradigms. Look into c++11!!!
 %\item Interesting point: TeX the package used to create documents is a form of compilation.
@@ -458,6 +528,8 @@ This section will focus on the methods and implications of using threads. Nevert
 
 \section{Implementation}
 
+TALK ABOUT LANGUAGES TO USE HERE!
+
 %\item Challenges and appropriateness for implementation
 %\subitem How the programming paradigm (proc, oop, functional){\bf affects the life implementation?} Mainly mention limitations here! (In haskell we can do X, but in C we can do Y blah blah...) Mention typing, inheritance, evaluation, verbosity, classes, shared objects...etc...
 %\subitem Memory structures? (quad tree, sequential bits, OOP, struct linked list)
@@ -478,6 +550,7 @@ This section will focus on the methods and implications of using threads. Nevert
 
 \subsection{C with OpenMP}
 
+%race condition?
 %\item Language features
 %\subitem Register
 %\subitem Inline
@@ -500,21 +573,25 @@ This section will focus on the methods and implications of using threads. Nevert
 
 %OpenMP is an ``API specification for parallel programming'' ... \cite{ref3}
 
-\subsection{C with PThreads}
-\subsection{C++ with Boost}
+
+%\subsection{C with PThreads}
+%skip this?!?!!
 \subsection{Java with Threads}
 %\item gcj and javac
 %\item fork, join, yield, sleep
 %\item Overheads? Thread creation - compare to C
 %\item OOP? Threads as an object?
-\subsection{Pyhton}
+\subsection{C++ with Boost}
+\subsection{C++ 11 Threads}
+\subsection{Python}
+\subsection{Go and Goroutines}
 
 %\item List comprehension
 %\item Parallel processing?
 %\item parallel applications of Map, Reduce, and List Comprehension? Can it be done? Reference Parallel Computing: Architectures, Algorithms, and Applications, C. Bischof et al (Eds.) P203 Implementing Data-Parallel Patterns for Shared Memory with OpenMP GOOD ARTICLE!
 %\item The other paradigm? Fetching a 3x3 block of cells. Processing them, return the result... 
 
-\subsection{C with CUDA}
+%\subsection{C with CUDA}
 \section{Analysis}
 \subsection{Problems}
 

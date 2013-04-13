@@ -96,7 +96,8 @@
 With such a large number of choices open to programmers in the context of multi-core programming and writing concurrent code there is no wonder that it can be a bit of a minefield getting started. This investigation is aimed at providing an insight into the relevant features and facilities of popular (and not so popular) multi-threading solutions. Whilst also aiming to provide details of some of the quirks and eccentricities encountered during parallel program design and implementation.
 
 The scope of this project includes a discussion of the procedures involved in designing and implementing parallel code, and the generic features of multi-thread capable libraries. A walk-through of the different code implementations and an analysis based on the {\bf core values} outlined later in this section.
-%Using Conway's Game of Life as a conduit to explore the facilities and functionality of different multi-threading libraries and languages, I will compare and contrast the different implementations I produce to investigate their overall appropriateness for simple parallel programs.
+%Using Conway's Game of Life as a conduit to e set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , pexplore the facilities and functionality of different multi-threading libraries and languages, I will compare and contrast the different implementations I produce to investigate their overall appropriateness for simple parallel programs.
 %Why Conway's Game of Life? 
 \subsection{Motivation}
 Designing parallel code, especially for a beginner, is an activity filled with difficult decisions about how to proceed. At every point in the development cycle the stakes are high, and the overall success of the application depends heavily on decisions made during the design and implementation stage. Most importantly, I believe the likelihood of producing a successful parallel application relies on the decision of what multi-threaded language or library to use. The motivation for this project resides my belief that there is a need for a concise resource that contrasts and compares the benefits and pitfalls of popular multi-threading packages for a parallel problem which is simple and common.
@@ -481,11 +482,61 @@ Hello World from pthread 2
 Hello World from pthread 3
 \end{verbatim}
 \subsubsection{Synchronisation}
-The art of coordinating simultaneous threads of execution. At its simplest it involves gathering a team of threads at a point in the program before they are allowed to proceed. This practice is known as a {\bf join} function. 
+This is defined as the art of coordinating simultaneous threads of execution. At its simplest it involves gathering a team of threads at a point in the program before they are allowed to proceed. This practice is known as a {\bf join} function. It can be seen as the opposite of a {\bf fork} operation. If fork creates a team of threads then join brings them back together before terminating. This is extremely useful if at any step during the execution there is a section of the parallel algorithm that requires a task to have been completed, or a task that only needs to be done once, a bottleneck. The concept of a {\bf barrier} also exists and is like a join inside a parallel region, except the threads aren't terminated when the team is synchronised. At a barrier each thread that encounters it waits until all the threads in the team arrive. Upon arrival of the last thread, all threads are released and continue execution. \cite[p265]{ref14}
+
+The other most basic type of synchronisation is when a thread demands use of a shared resource. It would create havoc if every active thread could access any given shared resource at any time. Consider the scenario of a simple function that increments an integer, a shared resource. Thread 1 reads the integer, thread 2 reads the integer, thread 1 increments the integer, thread 2 increments the integer. Something is wrong here. If a function that increments a shared resource is called twice, the expected answer would be two more than its initial value. However in this example the value is actually only one more than the initial value. This is called a {\bf race condition}. Both threads had access to the resource at the same time and before thread 1 could write back its answer, thread 2 had already read the initial value. A simple example, yet on a larger scale this is a very real danger. The solution? {\bf Mutual Exclusion} of a shared resource. The process of using a {\bf mutex}. \cite[p272]{ref14} A more concise definition is that this would occur when one thread reads from a location that is also being written to by another thread. By using mutual exclusion the programmer can control access to a function so that only one thread can be executing the code at any one time. \cite[p18]{ref14}
 %explain join
 %join = barrier?
-\subsubsection{Getting into Trouble}
+\subsubsection{Getting into Trouble and the Game of Life}
+In the context of the parallel Game of Life algorithm it is worth noting that there are specific points in the code that require thread synchronisation to ensure the correctness of the result. Referring to {\it figure 9} there are two synchronisation points. The threads must all {\bf fork} after the ghost cells have been correctly copied and {\bf join} before the grid pointers are swapped and the main game loop iterates. Throughout the code this effect will be achieved in different ways and discussed at length in terms of the differences and solutions for each individual implementations
 
+What would happen if we neglected to synchronise? Well, different things. Firstly both the copying of the ghost cells and the swapping of the pointers should only occur once per cycle. Secondly, these activities are essentially writing to the contents of the array whilst the other threads are waiting to read from it. Without synchronising the threads a {\bf race condition could} occur. A race condition, outlined in the earlier section, is about contention of resources. Where, in a team of threads, one is trying to write, whilst others may be trying to read. The outcome of the read value can never be guaranteed without using synchronisation. In the Game of Life parallel algorithm, this is achieved by using {\bf barrier} objects to alter the flow of control in the algorithm it is explained in-depth in the OpenMP implementation.
+
+Another possible consequence of not synchronising is the {\bf consumer-producer} problem. However, during the design stage of the Game of Life parallel algorithm this outcome was made impossible by the choice of data structure. Nevertheless I will explain it with a relevant example; Imagine a dynamic workload scheduling structure for the Game of Life's parallel algorithm.\cite[p10]{ref13}
+\smallskip
+\begin{mdframed}
+{\bf Note Box: } This technique could be described as fine-grained. As the size of an individual datum that could be mapped to a computational unit is the smallest possible. One cell. As discussed earlier, the flexibility of the algorithm has increased. Also, this implementation would make a great starting point to implement a work stealing version of the algorithm. However, the algorithm now has more significant overheads involved with scheduling and synchronising the work. Is it worth it?
+\end{mdframed}
+\smallskip
+{\it X} threads working on calculating the moore-neighbourhood where there is one producer and more than one consumer. The consumer waits for data to be put in its queue by the producer.  The producer waits for consumers to have room in their data structures for its data. The producer in this example would be the main thread and could operate on a system where, as soon as relevant cells have been copied during the ghost cell phase, begin dispatching work.
+\begin{lstlisting}[language=C, caption={Dynamic Work allocation pseudo-code for the Game of Life}]
+struct queueItem
+{
+    int x, int y;
+}
+
+
+calcMoore(queueItem *, grid *, new\_grid *)
+{
+    //read neighbour data from grid pointer
+    //apply rule and write result to new\_grid pointer
+}
+
+consume()
+{
+    if(queue.size() == 0)
+    {
+        wait();
+    }
+    
+    calcMoore(queue.getTop())
+    
+    queue.pop()
+}
+
+produce()
+{
+    if(queue.size() == MAXSIZE)
+    {
+        wait();
+    }
+    
+    queue.push(queueItem *);
+}
+\end{lstlisting}
+The consumer/producer scenario requires a lot of synchronisation to run smoothly and there are many issues that can arise from using it. Consider line 15 and line 27 of {\it listing 8}. What if the consumer makes the call to check the size of the queue, but before the comparison can be made the producer has put work in the queue? The program has just generated a race condition. The consumer thread will continue to wait and, because it hasn't realised the work in its queue, will remain in wait. In the meantime the producer thread will continue to add items to the consumer queue until it is full and then end up in a state of wait as well. The solution to this would be to use mutual exclusion on any thread requesting the size of the queue. However this still isn't enough, if a thread does end up in waiting then the other must communicate to it via a {\bf notify()} function, or similar, that it should wake up and check its queue for work.\cite[p18]{ref14}
+
+The downside of using synchronisation objects is the overheads created by their use. Extra memory space allocated for locks, extra functions calls for use and destruction, extra time acquiring and releasing locks. Not only that but if implemented incorrectly they can cause blocks and locks of their own. \cite[Granularity]{ref15}
 
 %\item Von Neumann architecture
 %\subitem Von Neumann bottleneck?
@@ -527,26 +578,19 @@ The art of coordinating simultaneous threads of execution. At its simplest it in
 %\item Requirements elicitation? (It has to go somewhere!)
 
 \section{Implementation}
-
-TALK ABOUT LANGUAGES TO USE HERE!
-
-%\item Challenges and appropriateness for implementation
-%\subitem How the programming paradigm (proc, oop, functional){\bf affects the life implementation?} Mainly mention limitations here! (In haskell we can do X, but in C we can do Y blah blah...) Mention typing, inheritance, evaluation, verbosity, classes, shared objects...etc...
-%\subitem Memory structures? (quad tree, sequential bits, OOP, struct linked list)
-%\subitem Processing methods (sequential, threaded, more threads, less threads, thread communication?)
-%\subitem FOR ALL OF THESE MENTION LIMITATIONS AND BENEFITS!
-%\item Pseudo-Code (both sequential and threaded)
-%\item UML (both sequential and threaded)
-%\subitem state diagram showing generation processes
+The languages I'm going to look at have been picked to highlight the fundamental differences in parallel design and threading library functionality and facilities. 
+\begin{itemize}
+\item {\bf OpenMP} - A mixture of an implicit threading package with an extremely fast and efficient language that also houses an {\bf optimising compiler}.
+\item {\bf Java} - An Object-Oriented language and a threading package that supports explicit threading via the inheritance and implementation of a thread class.
+\item {\bf C++ 11} - A relatively new addition to the C++ standard library. It is an explicit threading model that supports threading by function delegation.
+\item {\bf C++ Boost} - The original alternative to using PThreads in C++. This explicit threading solution will be different from the C++11 implementation by the use of a thread class system similar to Java.
+\item {\bf Go and Goroutines} - A recently released language that is created to perform the functions of a systems language only with a more flexible type system. The system of creating parallel code is also extremely different from anything encountered in other models.
+\end{itemize}
+\begin{mdframed}
+{\bf Knowledge Box: } There has been little talk of compilers during this 
+\end{mdframed}
 %\subitem class diagram for OOP models
-%\subitem SEQUENCE diagram!! Useful for showing method calls and generation order. Couple with state Diagram
 %\item Validation technique
-%\subitem Functional model (Possible haskell, lisp, clojure, ML, Maybe even SaC?!?)
-%\subitem Original seed grid
-%\item Program variables!
-%\subitem How will this effect runtime performance?
-%\item The Abstract pseudo Algorithm!!
-%\subitem ``Basic Explanation.txt''
 
 \subsection{C with OpenMP}
 
@@ -577,6 +621,7 @@ TALK ABOUT LANGUAGES TO USE HERE!
 %\subsection{C with PThreads}
 %skip this?!?!!
 \subsection{Java with Threads}
+Use appendix A from The Art of Multiprocessor Programming.
 %\item gcj and javac
 %\item fork, join, yield, sleep
 %\item Overheads? Thread creation - compare to C
@@ -593,18 +638,18 @@ TALK ABOUT LANGUAGES TO USE HERE!
 
 %\subsection{C with CUDA}
 \section{Analysis}
-\subsection{Problems}
-
-%\item Should this really be here? It should really be rounded up in each subheading...
-%\item Optimisations compiler results mess up
-%\item Functional model learning curve and paradigm shift. 
-%\item Python - Using functional techniques.
-
-\subsection{Syntax and Semantics}
-\subsection{Ease of use}
-\subsection{Features}
-\subsection{Performance}
-\subsection{Extensions}
+%\subsection{Problems}
+%
+%%\item Should this really be here? It should really be rounded up in each subheading...
+%%\item Optimisations compiler results mess up
+%%\item Functional model learning curve and paradigm shift. 
+%%\item Python - Using functional techniques.
+%
+%\subsection{Syntax and Semantics}
+%\subsection{Ease of use}
+%\subsection{Features}
+%\subsection{Performance}
+%\subsection{Extensions}
 
 %\item Using OOP to recognize patterns and predict movement. I.e. Gliders and inverters.
 

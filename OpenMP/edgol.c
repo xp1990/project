@@ -7,15 +7,15 @@
 #include <stdbool.h>
 
 #define MAXGEN 10000
-#define DIM 1024
+#define DIM 512
 #define LIFE 3
 #define BOOL 1
 #define SEED 2012
 #define THREADS 4
-#define SHARED 0
+#define SHARED 1
 #define INLINE 1
 #define REGISTER 1
-#define FILENAME "1024.dat"
+#define FILENAME "512.dat"
 
 struct timespec begin, end;
 int cell_count, life_count;
@@ -150,17 +150,7 @@ main (int argc, char *argv[])
             
             #pragma omp single
             {
-                for (i = 1; i <= DIM; i++)
-    {
-        grid_ptr[i][DIM + 1] = grid_ptr[i][1];
-        grid_ptr[i][0] = grid_ptr[i][DIM];
-    }
-    /*copy ghost rows to grid */
-    for (j = 0; j <= DIM + 1; j++)
-    {
-        grid_ptr[0][j] = grid_ptr[DIM][j];
-        grid_ptr[DIM + 1][j] = grid_ptr[1][j];
-    }
+                copyGhostCells(grid_ptr);
             }
             
             process (grid_ptr, new_grid_ptr, start, stop, tid);

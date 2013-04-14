@@ -289,7 +289,7 @@ However, in these loops we only care about the cells relating to the global stat
     }
     /*copy ghost rows to grid */
     for (i = 0; i <= DIM + 1; j++)
-    {signing and implementing parallel code, and the generic features of multi-thread capable libraries. A walk-through of the different code implementations and an analysis based on the {\bf core values} outlined 
+    {
         grid_ptr[0][i] = grid_ptr[DIM][i];
         grid_ptr[DIM + 1][i] = grid_ptr[1][i];
     }
@@ -617,8 +617,8 @@ These settings are then used to conditionally declare the function prototypes an
 
 The structure and scope of the global state arrays is worth noting. Whilst the variable for these arrays is in the global scope, all of the code that accesses them does so through a pair of copied pointers; {\bf new\_grid\_ptr}, and {\bf grid\_ptr}. Defined in A.2 - lines 66 - 70 and used in A.2 - lines 110, 111. This is to simplify the process of swapping the grids over after the processing of a generation, see {\it figure 9} for reference. Then A.2 - line 116 performs a call to the readFile() function. It can be seen in A.2 - lines 399 - 442. 
 
-A.2 - line 119, declares the private integers for the OpenMP {\bf parallel region}; {\bf start}, {\bf stop} and {\bf tid}. This is the static work allocation calculation algorithm, shown in {\it listing 10} lines 16 and 17. It should be noted that this is based off the pseudo-code algorithm in {\it listing 5}. However the real line of interest is line 11. This is the OpenMP pragrma directive which will direct the compiler to create a team of threads. There are two constructs which are applicable to this problem; {\bf omp parallel} and {\bf omp for}. The construct simply creates a team of threads with parameters defined by the list of {\bf clauses} outlined by the programmer. Clauses help the programmer gain a bit of control over how the OpenMP API manages the implicit threads. Used in this example I am defining some {\bf shared} and {\bf private} variables for each thread. The shared clause means each thread has access to a copy of the listed value in shared memory space. In this case the {\bf grid\_ptr}, {\bf new\_grid\_ptr}, {\bf temp\_ptr}, and the number of threads. The private clause means that each thread has its own {\bf local} copy of the variable listed. The {\bf gen} variable is used as a loop counter, the {\bf tid} variable is the thread's identifer, the {\bf start} and {\bf stop} variables define the limits of the static work allocation. After the pragma directive every statement inside the {\bf parallel region}, defined by the curly braces, is executed by each thread in parallel. 
-\begin{lstlisting}
+A.2 - line 119, declares the private integers for the OpenMP {\bf parallel region}; {\bf start}, {\bf stop} and {\bf tid}. This is the static work allocation calculation algorithm, shown in {\it listing 10} lines 17 and 18. It should be noted that this is based off the pseudo-code algorithm in {\it listing 5}. However the real line of interest is line 11. This is the OpenMP pragrma directive which will direct the compiler to create a team of threads. There are two constructs which are applicable to this problem; {\bf omp parallel} and {\bf omp for}. The construct simply creates a team of threads with parameters defined by the list of {\bf clauses} outlined by the programmer. Clauses help the programmer gain a bit of control over how the OpenMP API manages the implicit threads. Used in this example I am defining some {\bf shared} and {\bf private} variables for each thread. The shared clause means each thread has access to a copy of the listed value in shared memory space. In this case the {\bf grid\_ptr}, {\bf new\_grid\_ptr}, {\bf temp\_ptr}, and the number of threads. The private clause means that each thread has its own {\bf local} copy of the variable listed. The {\bf gen} variable is used as a loop counter, the {\bf tid} variable is the thread's identifer, the {\bf start} and {\bf stop} variables define the limits of the static work allocation. After the {\bf \#pragma omp parallel} directive every statement inside the {\bf parallel region}, defined by the curly braces, is executed by each thread in parallel. 
+\begin{lstlisting}[language=C, caption={OpenMP directive use and thread creation}]
 //......
 
 /*private OMP vars */
@@ -638,6 +638,28 @@ int start, stop, tid;
     start = ((DIM / nthreads) * tid) + 1;
     stop = (DIM / nthreads) + start - 1;
     //....
+\end{lstlisting}
+The {\bf for} construct differs from {\bf parallel} by also implicitly managing the scheduling of the work. Defined as a {\bf work-sharing} construct, this could replace the use of the parallel region by being placed directly before the main game for loop and it would implicitly share the loop iterations between the created threads. Replacing the need for any for static work allocation to take place. However, in practice this was not so, I could never guarantee the correctness of the results. A symptom of implicit threading is that they are notoriously hard to debug. Therefore I opted for the construct that gave me the most control, parallel. {\it Listing 10} shows the main game loop which is {\bf inside} the parallel region defined by the OpenMP directive. 
+\begin{lstlisting}[language=C, caption={OpenMP Game of Life main game loop}]
+//...
+for (gen = 0; gen < MAXGEN; gen++)
+{
+    #pragma omp single
+    {
+        copyGhostCells(grid_ptr);
+    }
+            
+    process (grid_ptr, new_grid_ptr, start, stop, tid);
+
+    #pragma omp barrier
+            
+    #pragma omp single
+    {
+        temp_ptr = grid_ptr;
+        grid_ptr = new_grid_ptr;
+        new_grid_ptr = temp_ptr;
+    }
+}
 \end{lstlisting}
 \subsubsection{Optimising features}
 inline/register, O3.
@@ -688,6 +710,9 @@ Use appendix A from The Art of Multiprocessor Programming.
 
 %\subsection{C with CUDA}
 \section{Analysis}
+
+OMP - horrible to debug, evidenced by for loop producing incorrect results. symptom of implicit threading
+
 %\subsection{Problems}
 %
 %%\item Should this really be here? It should really be rounded up in each subheading...

@@ -234,20 +234,19 @@ class Grid
 public class GoL
 {
 
-    private static final int THREADS = 4, DIM = 512, LIFE = 3, GEN = 1000;
+    private static final int THREADS = 4, DIM = 512, LIFE = 3, GEN = 10000;
 
     private static final String FILENAME = "512.dat";
 
     public static void main(String args[])
     {
-		Grid g1 = new Grid(DIM, LIFE, FILENAME);
-        Stopwatch stopwatch = new Stopwatch();
+		Stopwatch stopwatch = new Stopwatch();
+        stopwatch.start();
+        Grid g1 = new Grid(DIM, LIFE, FILENAME);
 		Vector<LifeThread> life_vec = new Vector<LifeThread>();
 
         try
         {
-        
-            stopwatch.start();
             for(int gen = 0; gen < GEN; gen++)
             {
                 for(int x = 0; x < THREADS; x++)

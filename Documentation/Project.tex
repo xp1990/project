@@ -95,7 +95,7 @@
 \section{Introduction}
 With such a large number of choices open to programmers in the context of multi-core programming and writing concurrent code there is no wonder that it can be a bit of a minefield getting started. This investigation is aimed at providing an insight into the relevant features and facilities of popular (and not so popular) multi-threading solutions. Whilst also aiming to provide details of some of the quirks and eccentricities encountered during parallel program design and implementation.
 
-The scope of this project includes a discussion of the procedures involved in designing and implementing parallel code, and the generic features of multi-thread capable libraries. A walk-through of the different code implementations and an analysis based on the {\bf core values} outlined later in this section.
+The scope of this project includes a discussion of the procedures involved in designing and implementing parallel code, and the generic features of multi-thread capable libraries. A walk-through of the different code implementations and an analysis based on the {\bf core values} outlined later in this section. It is a concious decision to leave an in-depth discussion about different compilers and interpreters out of this report.
 %Using Conway's Game of Life as a conduit to e set AFTER setting up the page geometry
 \pagestyle{fancy} % options: empty , pexplore the facilities and functionality of different multi-threading libraries and languages, I will compare and contrast the different implementations I produce to investigate their overall appropriateness for simple parallel programs.
 %Why Conway's Game of Life? 
@@ -122,8 +122,11 @@ To compare and contrast multi-threading languages and libraries using Conway's G
 %\subitem Because the number of cores will only increase as time passes, your concurrent applications should be effective on a wide range of numbers of threads and cores, and sizes of data sets. Scalability refers to what you should expect with regard to how a given concurrent algorithm will behave with changes in the number of cores or size of data sets.
 \end{itemize}
 \subsection{Required Knowledge}
+\subsection{Project Scope}
+%Maybe just use the introduction to explain this?
 \subsection{Project Structure}
 The investigation begins with an in-depth discussion of cellular automata, in particular Conway's Game of Life. This is succeeded by a look at some of the main algorithms that make the game work, in sequential C. 
+\subsection{Test Setup}
 \section{Background Research and Algorithm Design}
 \subsection{Life}
 Conway's Game of Life is an example of a {\bf cellular automaton} (CA). This is described \cite[Lesser, Wuensche, 1992 p6]{ref6} as a ``discrete dynamical system which evolves by the iteration of a simple deterministic rule''. When considering constructing a CA there are a few steps one has to follow:
@@ -373,7 +376,7 @@ An analysis of the sequential code using the GNU runtime profiler {\bf Gprof}, s
 \end{verbatim}
 \end{figure}
 
-From this data an attempt can be made to calculate the expected speed-up for different numbers of processors. Using the values in the {\bf \% time} column of the table one can estimate a value for {\bf P} the proportion of code that can be made parallel. However, it should be noted that when converting a sequential algorithm to a parallel one it is normal for the {\bf problem size} to increase. In this context, this means the addition of scheduling and synchronisation algorithms. This will be covered later in more detail in section 5.1.
+From this data an attempt can be made to calculate the expected speed-up for different numbers of processors. Using the values in the {\bf \% time} column of the table one can estimate a value for {\bf P} the proportion of code that can be made parallel. However, it should be noted that when converting a sequential algorithm to a parallel one it is normal for the {\bf problem size} to increase. In this context, this means the addition of scheduling and synchronisation algorithms. This will be covered later in more detail in section 4.1.
 \subsubsection*{Partitioning}
 The main concerns here are the ability to maintain {\bf scalability} and {\bf hide latency} when the program is run in a parallel manner. Where scalability refers to the measure of increased performance for an increased number of computational units. And hiding latency is the extent to which the overheads created by an increase of communication and code are hidden by an overall speed-up and increased processing power (by utilising multi-core or multi-computer architectures). \cite[p78,79]{ref9} To address the issues of scalability and latency the initial workload will be {\bf decomposed} into a number of partitions less than or equal to the number of computational units available.\\
 %something is wrong with the formatting if this line is removed?
@@ -587,13 +590,60 @@ The languages I'm going to look at have been picked to highlight the fundamental
 \item {\bf Go and Goroutines} - A recently released language that is created to perform the functions of a systems language only with a more flexible type system. The system of creating parallel code is also extremely different from anything encountered in other models.
 \end{itemize}
 \begin{mdframed}
-{\bf Knowledge Box: } There has been little talk of compilers during this 
+{\bf Knowledge Box: } Whilst it may be that compilers and interpreters are not the focus of this report. It is important to define and distinguish between the various mechanisms used in the languages that are used to provide implementations. A {\bf compiler} is . An {\bf interpreter} is . An {\bf optimising compiler} is .
 \end{mdframed}
+\bigskip
+As well as these 5 implementations I have included a Python implementation. This language is {\bf dynamically typed}, {\bf interpreted}, and supports a wide-range of programming styles. In particular interest to me, was the support for functional style {\bf list comprehensions}. This functionality will be used to provide a Game of Life implementation where the programming style is different to the others that have been proposed. List comprehensions are powerful constructs which are unique in their likeness to {\bf set-builder notation} in {\bf set theory}. One property of the functional program paradigm is that they can be proven mathematically. My idea being that if I can create an implementation in Python using set-builder notation and then list comprehension I can circumvent the process of verification of parallel algorithms or formal proofs. Two subjects which have enough content for an entire project each.
 %\subitem class diagram for OOP models
 %\item Validation technique
 
 \subsection{C with OpenMP}
+This is the obvious first choice for parallel implementation as the design of the parallel algorithm was based around the sequential prototype which was produced in C. Being such a flexible and low-level systems language it gave me an opportunity to look into some features that just aren't present in more modern languages. These are talked about in the next subsection.
 
+C allows the use of preprocessor macro statements. At the top of the file is a list of 10 or so items which represent the settings for the {\bf conditional compilation} of the code({\it listing 9}). This is not only good practice, as it makes any changeable settings very visible to the programmer, it also makes the object file smaller and useless code that may be spent dissecting command line arguments is not present. 
+\begin{lstlisting}[language=C, caption={OpenMP program settings in file}]
+#define MAXGEN 10000       //the number of generations to compite
+#define DIM 512            //the dimension of the grid 
+#define LIFE 3             //probability of life, only used if no file read
+#define BOOL 1             //use bool for the data type of the arrays, else int
+#define SEED 2012          //seed for random algorithm, only used if no file read
+#define THREADS 4          //number of threads to allocate
+#define SHARED 1           //use shared memory or private memory for threads
+#define INLINE 1           //use inline function prototypes
+#define REGISTER 1         //use register keyword for global array definition
+#define FILENAME "512.dat" //the filename to read in
+\end{lstlisting}
+These settings are then used to conditionally declare the function prototypes and global variables for the program shown in A.2 - lines 27-60. In the same way, conditional compilation is used to create the correct data structure for the global state arrays shown in A.2 - lines 89 - 107.
+
+The structure and scope of the global state arrays is worth noting. Whilst the variable for these arrays is in the global scope, all of the code that accesses them does so through a pair of copied pointers; {\bf new\_grid\_ptr}, and {\bf grid\_ptr}. Defined in A.2 - lines 66 - 70 and used in A.2 - lines 110, 111. This is to simplify the process of swapping the grids over after the processing of a generation, see {\it figure 9} for reference. Then A.2 - line 116 performs a call to the readFile() function. It can be seen in A.2 - lines 399 - 442. 
+
+A.2 - line 119, declares the private integers for the OpenMP {\bf parallel region}; {\bf start}, {\bf stop} and {\bf tid}. This is the static work allocation calculation algorithm, shown in {\it listing 10} lines 16 and 17. It should be noted that this is based off the pseudo-code algorithm in {\it listing 5}. However the real line of interest is line 11. This is the OpenMP pragrma directive which will direct the compiler to create a team of threads. There are two constructs which are applicable to this problem; {\bf omp parallel} and {\bf omp for}. The construct simply creates a team of threads with parameters defined by the list of {\bf clauses} outlined by the programmer. Clauses help the programmer gain a bit of control over how the OpenMP API manages the implicit threads. Used in this example I am defining some {\bf shared} and {\bf private} variables for each thread. The shared clause means each thread has access to a copy of the listed value in shared memory space. In this case the {\bf grid\_ptr}, {\bf new\_grid\_ptr}, {\bf temp\_ptr}, and the number of threads. The private clause means that each thread has its own {\bf local} copy of the variable listed. The {\bf gen} variable is used as a loop counter, the {\bf tid} variable is the thread's identifer, the {\bf start} and {\bf stop} variables define the limits of the static work allocation. After the pragma directive every statement inside the {\bf parallel region}, defined by the curly braces, is executed by each thread in parallel. 
+\begin{lstlisting}
+//......
+
+/*private OMP vars */
+int start, stop, tid;
+
+/**
+ * Create a team of threads (defined by nthreads) to work on the following code.
+ * Run for MAXGEN iterations of Game.
+ **/
+#if SHARED == 1
+#pragma omp parallel shared(grid_ptr, new_grid_ptr, temp_ptr, nthreads) private(gen, tid, start, stop)  num_threads(nthreads)
+{
+	/*assign the thread an identifier*/
+    tid = omp_get_thread_num ();
+
+    /*define the amount of work for each thread */
+    start = ((DIM / nthreads) * tid) + 1;
+    stop = (DIM / nthreads) + start - 1;
+    //....
+\end{lstlisting}
+\subsubsection{Optimising features}
+inline/register, O3.
+\subsubsection{Shared or Private Memory}
+
+\subsubsection{Testing}
 %race condition?
 %\item Language features
 %\subitem Register

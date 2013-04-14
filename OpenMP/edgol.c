@@ -34,16 +34,21 @@ void fillRand (int **);
 #endif
 
 
+
 #if INLINE == 1 && BOOL == 1
+inline void copyGhostCells(bool**);
 inline void process (bool **, bool **, int, int, int);
 inline void privMemCopy (int, int, bool **, bool **);
 #elif INLINE == 0 && BOOL == 1
+void copyGhostCells(bool**);
 void process (bool **, bool **, int, int, int);
 void privMemCopy (int, int, bool **, bool **);
 #elif INLINE == 0 && BOOL == 0
+void copyGhostCells(int**);
 void process (int **, int **, int, int, int);
 void privMemCopy (int, int, int **, int **);
 #elif INLINE == 1 && BOOL == 0
+inline void copyGhostCells(int**);
 inline void process (int **, int **, int, int, int);
 inline void privMemCopy (int, int, int **, int **);
 #endif
@@ -140,38 +145,19 @@ main (int argc, char *argv[])
         for (gen = 0; gen < MAXGEN; gen++)
         {
             /*only executed by thread 0 */
-            //#pragma omp single - GAVE WRONG RESULTS! consistantly
-            if (tid == 0)
+            //if (tid == 0)
+            //#pragma omp barrier
+            
+            #pragma omp single
             {
-                /**
-                *There is another way of doing this using nested loops.
-                *and if statements however this way is FAR more efficient!
-                **/
-
-                /*copy ghost columns to grid */
-                //#pragma parallel omp for - this works! however a speed up is not noticable?
-                for (i = 1; i <= DIM; i++)
-                {
-                    grid_ptr[i][DIM + 1] = grid_ptr[i][1];
-                    grid_ptr[i][0] = grid_ptr[i][DIM];
-                }
-                /*copy ghost rows to grid */
-                //#pragma omp parallel for - this works! however a speed up is not noticable?
-                for (j = 0; j <= DIM + 1; j++)
-                {
-                    grid_ptr[0][j] = grid_ptr[DIM][j];
-                    grid_ptr[DIM + 1][j] = grid_ptr[1][j];
-                }
+                copyGhostCells(grid_ptr);
             }
-
-            //equivalent of join.
-            #pragma omp barrier
-            //what would happen if this were removed?
+            
             process (grid_ptr, new_grid_ptr, start, stop, tid);
 
             #pragma omp barrier
-            //what would happen if this were removed?
-            if (tid == 0)
+            
+            #pragma omp single
             {
                 temp_ptr = grid_ptr;
                 grid_ptr = new_grid_ptr;
@@ -214,27 +200,10 @@ main (int argc, char *argv[])
         
         for (gen = 0; gen < MAXGEN; gen++)
         {
-            if (tid == 0)
-            {
-                /**
-                *There is another way of doing this using nested loops.
-                *and if statements however this way is FAR more efficient!
-                **/
-
-                /*copy ghost columns to grid */
-                for (i = 1; i <= DIM; i++)
-                {
-                    grid_ptr[i][DIM + 1] = grid_ptr[i][1];
-                    grid_ptr[i][0] = grid_ptr[i][DIM];
-                }
-                /*copy ghost rows to grid */
-                for (j = 0; j <= DIM + 1; j++)
-                {
-                    grid_ptr[0][j] = grid_ptr[DIM][j];
-                    grid_ptr[DIM + 1][j] = grid_ptr[1][j];
-                }
-
-            }
+            //if (tid == 0)
+            #pragma omp master
+                copyGhostCells(grid_ptr);
+                
             //printf("beginning private memory copy...\n");
 
             privMemCopy (start, stop, priv_grid, grid_ptr);
@@ -271,6 +240,31 @@ main (int argc, char *argv[])
   free(grid);
   free(new_grid);
   return (0);
+}
+
+#if INLINE == 1 && BOOL == 1
+inline void copyGhostCells(bool** grid_ptr)
+#elif INLINE == 0 && BOOL == 1
+void copyGhostCells(bool** grid_ptr)
+#elif INLINE == 0 && BOOL == 0
+void copyGhostCells(int** grid_ptr)
+#elif INLINE == 1 && BOOL == 0
+inline void copyGhostCells(int** grid_ptr)
+#endif
+{
+    int i,j;
+    /*copy ghost columns to grid */
+    for (i = 1; i <= DIM; i++)
+    {
+        grid_ptr[i][DIM + 1] = grid_ptr[i][1];
+        grid_ptr[i][0] = grid_ptr[i][DIM];
+    }
+    /*copy ghost rows to grid */
+    for (j = 0; j <= DIM + 1; j++)
+    {
+        grid_ptr[0][j] = grid_ptr[DIM][j];
+        grid_ptr[DIM + 1][j] = grid_ptr[1][j];
+    }
 }
 
 void

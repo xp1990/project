@@ -7,15 +7,15 @@
 #include <stdbool.h>
 
 #define MAXGEN 10000
-#define DIM 512
+#define DIM 1024
 #define LIFE 3
 #define BOOL 1
 #define SEED 2012
 #define THREADS 4
-#define SHARED 1
+#define SHARED 0
 #define INLINE 1
 #define REGISTER 1
-#define FILENAME "512.dat"
+#define FILENAME "1024.dat"
 
 struct timespec begin, end;
 int cell_count, life_count;
@@ -146,11 +146,21 @@ main (int argc, char *argv[])
         {
             /*only executed by thread 0 */
             //if (tid == 0)
-            //#pragma omp barrier
+            //#pragma omp barriers
             
             #pragma omp single
             {
-                copyGhostCells(grid_ptr);
+                for (i = 1; i <= DIM; i++)
+    {
+        grid_ptr[i][DIM + 1] = grid_ptr[i][1];
+        grid_ptr[i][0] = grid_ptr[i][DIM];
+    }
+    /*copy ghost rows to grid */
+    for (j = 0; j <= DIM + 1; j++)
+    {
+        grid_ptr[0][j] = grid_ptr[DIM][j];
+        grid_ptr[DIM + 1][j] = grid_ptr[1][j];
+    }
             }
             
             process (grid_ptr, new_grid_ptr, start, stop, tid);
@@ -201,11 +211,12 @@ main (int argc, char *argv[])
         for (gen = 0; gen < MAXGEN; gen++)
         {
             //if (tid == 0)
-            #pragma omp master
+            #pragma omp single
+            {
                 copyGhostCells(grid_ptr);
-                
+            }
             //printf("beginning private memory copy...\n");
-
+            
             privMemCopy (start, stop, priv_grid, grid_ptr);
 
             //printf("Copied grid to private thread memory\n");
@@ -216,7 +227,7 @@ main (int argc, char *argv[])
 
             #pragma omp barrier
 
-            if (tid == 0)	//why != 0?!?
+            #pragma omp single
             {
                 temp_ptr = grid_ptr;
                 grid_ptr = new_grid_ptr;

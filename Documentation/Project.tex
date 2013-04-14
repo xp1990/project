@@ -639,7 +639,7 @@ int start, stop, tid;
     stop = (DIM / nthreads) + start - 1;
     //....
 \end{lstlisting}
-The {\bf for} construct differs from {\bf parallel} by also implicitly managing the scheduling of the work. Defined as a {\bf work-sharing} construct, this could replace the use of the parallel region by being placed directly before the main game for loop and it would implicitly share the loop iterations between the created threads. Replacing the need for any for static work allocation to take place. However, in practice this was not so, I could never guarantee the correctness of the results. A symptom of implicit threading is that they are notoriously hard to debug. Therefore I opted for the construct that gave me the most control, parallel. {\it Listing 10} shows the main game loop which is {\bf inside} the parallel region defined by the OpenMP directive. 
+The {\bf for} construct differs from {\bf parallel} by also implicitly managing the scheduling of the work. Defined as a {\bf work-sharing} construct, this could replace the use of the parallel region by being placed directly before the main game for loop and it would implicitly share the loop iterations between the created threads. Replacing the need for any for static work allocation to take place. However, in practice this was not so, I could never guarantee the correctness of the results. A symptom of implicit threading is that they are notoriously hard to debug. Therefore I opted for the construct that gave me the most control: parallel. {\it Listing 11} shows the main game loop which is {\bf inside} the parallel region defined by the OpenMP directive. 
 \begin{lstlisting}[language=C, caption={OpenMP Game of Life main game loop}]
 //...
 for (gen = 0; gen < MAXGEN; gen++)
@@ -661,9 +661,46 @@ for (gen = 0; gen < MAXGEN; gen++)
     }
 }
 \end{lstlisting}
+On line 4 the {\bf single} directive means that the first thread to reach the block will execute the statements inside and it will only happen once. There is an implied {\bf barrier} at the end of the block which requires all the other threads to gather there. This allows the completion of the {\bf copyGhostCells} function before the team moves on. Line 9 is the main game function {\bf process()} this is seen in {\it listing 12}. The similarities between this version and the sequential version in {\it listing 4} should be visible with the exception of the conditional statement in the for loop on line 5. This is the last factor in ensuring the threads only process the work that was allocated to them. Each thread will read from the array pointed to by the {\bf grid\_ptr} and write to the array pointed to by the {\bf new\_grid\_ptr}. This ensures that the algorithm will not have to use locks or synchronisation to control the write/read operations on these data structures.
+\begin{lstlisting}[language=C, caption={OpenMP Process chunk and calculate moore-neighbourhood}]
+inline void process (bool ** grid_ptr, bool ** new_grid_ptr, int start, int stop, int tid)
+{
+  int i, j, count;
+
+    for (i = start; i <= stop; i++)
+    {
+        for (j = 1; j <= DIM; j++)
+        {
+            count =
+            grid_ptr[i - 1][j - 1] + grid_ptr[i - 1][j] +
+            grid_ptr[i - 1][j + 1] + grid_ptr[i][j - 1] +
+            grid_ptr[i][j + 1] + grid_ptr[i + 1][j - 1] +
+            grid_ptr[i + 1][j] + grid_ptr[i + 1][j + 1];
+
+            if (count == 3)
+            {
+                new_grid_ptr[i][j] = 1;
+            }
+            else if (count < 2 || count > 3)
+            {
+                new_grid_ptr[i][j] = 0;
+            }
+            else if (count == 2)
+            {
+                new_grid_ptr[i][j] = grid_ptr[i][j];
+            }
+        }
+    }
+\end{lstlisting}
+The barrier in {\it listing 11} on line 11 ensures that all threads gather at this point. This means each thread will have finished processing their respective chunks and the pointers can be swapped to allow the generation to complete. If the synchronisation clause was not here then the program runs the risk of swapping the pointers before the process of the global state has completed. A {\bf race condition} would occur and a thread still in the processing phase would write to the wrong location. The final OpenMP directive is another single block. The first thread to reach this block is responsible for swapping the pointers and it will only happen once. The threads gather at the implied barrier and the iteration continues to the next generation.
+\bigskip
+\begin{mdframed}
+{\bf Extension box: } I have also implemented a version of the Game of Life using thread {\bf local memory} as opposed to {\bf shared memory}. In this version, after the static work allocation algorithm, each thread is allocated a grid which is stored in its local memory space. This grid is the exact size of the chunk that it needs to process and the chunk from the global state is copied into this local memory array. The idea being that this could be implemented on a distributed parallel processing architecture. Using separate CPUs that only communicate to unzip or zip up the global state arrays. However, the code on a multi-core platform, performs slower than the shared memory version which is not surprising. I feel that it is a brilliant example of {\bf coarse-grained} versus {\bf fine-grained} data structures and whilst I will not talk about it directly in the report my code is in the appendices A.2 lines 169 - 227, lines 375 - 394.
+\end{mdframed}
 \subsubsection{Optimising features}
+
 inline/register, O3.
-\subsubsection{Shared or Private Memory}
+
 
 \subsubsection{Testing}
 %race condition?
@@ -700,9 +737,8 @@ Use appendix A from The Art of Multiprocessor Programming.
 %\item OOP? Threads as an object?
 \subsection{C++ with Boost}
 \subsection{C++ 11 Threads}
-\subsection{Python}
 \subsection{Go and Goroutines}
-
+\subsection{Python}
 %\item List comprehension
 %\item Parallel processing?
 %\item parallel applications of Map, Reduce, and List Comprehension? Can it be done? Reference Parallel Computing: Architectures, Algorithms, and Applications, C. Bischof et al (Eds.) P203 Implementing Data-Parallel Patterns for Shared Memory with OpenMP GOOD ARTICLE!

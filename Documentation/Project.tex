@@ -706,34 +706,31 @@ Unique to this implementation is that I have also produced a sequential version 
 
 A more in-depth discussion is available in section 3.2.2 and the output of GProf is available in Appendix A.9. Looking at the flat profile and the call graph, I'm assuming a value for {\bf P} to be 0.991 + 0.9932 / 2 = 0.9921. This is due to the two values reported by GProf for the percentage time spent inside the {\bf process()} function. I am using this figure because during the parallel code it is the {\bf process()} function that is made {\bf concurrent} and independent. It will be run in parallel by a certain number of threads.
 
-The value assumed for {\bf P} means that 99\% of the code inside the sequential version of the Game of Life is eligible for improvement. There is however the concern of increasing the {\bf problem size} which happens as the parallel code is produced. This is due to the need for work scheduling and thread synchronisation. This is not taken into account whilst calculating the speed-up as I have no data to suggest its affect. The addition of these tasks will decrease the value of {\bf P} as I am adding code which is not eligible for improvement. The added code for synchronisation and work scheduling cannot be made parallel. 
+The value assumed for {\bf P} means that 99\% of the code inside the sequential version of the Game of Life is eligible for improvement. There is however the concern of increasing the {\bf problem size} which happens as the parallel code is produced. This is due to the need for work scheduling and thread synchronisation. This is not taken into account whilst calculating the speed-up as I have no data to suggest its affect. The addition of these tasks will decrease the value of {\bf P} as I am adding code which is not eligible for improvement. The added code for synchronisation and work scheduling cannot be made parallel. {\it Figure 10} shows a graphical representation of the calculation of Amdahl's Law, {\it Figure 11} shows the raw data. It can be used for comparison by {\it figure 12} test data produced by the Game of Life parallel algorithm written in OpenMP.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{Amdahl.png}
+\caption{A Graph showing the calculated speed up by application of Amdahl's Law}
+\label{fig: AmdahlGraph}
+\end{figure}
 \subsubsection{Testing}
-%race condition?
-%\item Language features
-%\subitem Register
-%\subitem Inline
-%\subitem Optimizer compiler
-%\subitem Precompiler macros
-%\item Library features
-%\subitem atomic
-%\subitem barrier
-%\subitem master (same as tid == 0)
-%\subitem single (different to tid == 0, one thread only!)
-%\subitem parallel
-%\subitem for (how could this change the code??)
-%\subitem ordered
-%\item POI!! Implementing different library directives changes the results drastically.... Why?! Look into trace thread? correction...Linux Trace Tool Kit
-%\item Does it conform to the abstract routine?
-%\item shared memory versus private memory implementation. Problems? Results? Terribleness! Include code. EVIDENCE!!
-%\item Amdahl's Law with GProf
-%\item EXPAND ON RESEARCH SECTION!!!
+A full table of results is available in the appendices and will be explained during the analysis portion of the report. For now I have included data which attempts to stimulate a discussion about the correctness of Amdahl's law. The settings for the results listed in {\it figure 12} were as follows: dimension, 1024, generations, 10000, using shared memory threads, and optimisation level 3. Referring to the introductory remarks about testing, my system is based on an Intel Q6600 quad-core processor. The greatest number of truly parallel tasks my system is capable of running is four. One thread on each core. Considering this the results are quite promising. {\it Figure 12} shows that a sequential run of the program took nearly 40 seconds to execute. Another run of the code using 2 threads showed a speed up of 1.94 which is very close to the maximum calculated speed up of 1.98. This means that the estimation for {\bf P}, the proportion of code which can be made parallel, can not have been too far off! Looking at the next run with 4 cores the result is not as pleasing with a speed up of 3.03 compared to a calculated speed up of 3.9. Still it is in line with predictions. Alas, my system does not have enough independent computational units to allow any more meaningful results to be processed and 8 threads and above the performance gets gradually worse. This is not surprising as there are significant overheads related to switching a threads state from running to blocked, and with an increased number of threads being created this case would be happening a lot more.
 
+The maximum speed up theoretically possibly from a program where roughly 99\% of the code could be eligible for parallelism is around 126 times faster than a single threaded implementation. This is evidenced by {\it figures 10} and {\it 11} unfortunately I do not have access to a system with 65536 independent cores.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.6]{Speedup.png}
+\caption{The Speed up by application of Amdahl's Law}
+\label{fig: speedup}
+\end{figure}
 
-%OpenMP is an ``API specification for parallel programming'' ... \cite{ref3}
+\begin{figure}
+\centering
+\includegraphics[scale=0.7]{measured.png}
+\caption{The measured speed up}
+\label{fig: measured}
+\end{figure}
 
-
-%\subsection{C with PThreads}
-%skip this?!?!!
 \subsection{Java with Threads}
 Use appendix A from The Art of Multiprocessor Programming.
 %\item gcj and javac
@@ -751,6 +748,8 @@ Use appendix A from The Art of Multiprocessor Programming.
 
 %\subsection{C with CUDA}
 \section{Analysis}
+
+Head sub sections with each core value and talk about each language for at most 2 - 3 lines.
 
 OMP - horrible to debug, evidenced by for loop producing incorrect results. symptom of implicit threading
 

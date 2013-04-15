@@ -11,10 +11,10 @@
 #define LIFE 3
 #define BOOL 1
 #define SEED 2012
-#define THREADS 4
+#define THREADS 2
 #define SHARED 1
 #define INLINE 1
-#define REGISTER 1
+#define REGISTER 0
 #define FILENAME "512.dat"
 
 struct timespec begin, end;

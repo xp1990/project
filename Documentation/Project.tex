@@ -732,7 +732,40 @@ The maximum speed up theoretically possibly from a program where roughly 99\% of
 \end{figure}
 
 \subsection{Java with Threads}
-Use appendix A from The Art of Multiprocessor Programming.
+Java is one of the most popular languages on the planet. It's simple object-oriented design patterns and extreme portability make it the language of choice for any type of project. The implementation of the Game of Life in this language is inherently, very different to that of a procedural language such as C. The implementation I have produced has three classes. A {\bf Grid} class which houses all of the functionality for creating, reading from, and writing to the global state arrays which are also stored within its structure. The global state arrays, in line with my research are created as Java primitive arrays of type boolean. Next a class called {\bf LifeThread} provides the functionality for actually processing the global state arrays and advancing the game to the next generation. The final class is called {\bf GoL}, this class is the controller and creates instances of the other classes and houses the main game loop. The code is available in full in the appendices A.6.
+
+Java supports explicit threading through the use of a Thread class which is provided by the Java library. A class that wants to exploit all the abilities of a thread will have to implement or inherit the functionality of the Thread class and then ensure that an implementation is provided for a {\bf run()}  method. This method is executed by the calling class and the thread will cease to exist once run() returns. This is where the differences begin, in {\it listing 13} the main game loop is shown. There is no concept of a parallel region like in OpenMP. The main thread has to create new LifeThread objects for every single generation. Lines 9 - 10 show the application of the static work allocation algorithm. After this lines 11 and 12 show the initialisation and creation of LifeThread objects which are then stored in a vector of type LifeThread. Think of this vector as a common {\bf thread pool}. After the threads are all created and references stored inside the vector, the for loop on lines 15 - 17 runs {\bf start()} on each object. The start method implicitly calls the method {\bf run()} which had to be implemented because the class inherits from Thread. Then run will call processChunk(). A similar loop from lines 20 - 21 will now call {\bf join()} on all the threads in the vector. This means that the calling thread will have to wait until all the threads it asked to join have returned from their run methods. This synchronisation is the only type needed in the Java example and makes the code look far simpler than that of the OpenMP implementation. 
+\begin{lstlisting}[language=Java, caption={Class GoL main game loop in GoL.java}]
+//...
+Grid g1 = new Grid(DIM, LIFE, FILENAME);
+Vector<LifeThread> life_vec = new Vector<LifeThread>();
+
+for(int gen = 0; gen < GEN; gen++)
+{
+    for(int x = 0; x < THREADS; x++)
+    {
+        int start = ((DIM / THREADS) * x) + 1;
+        int stop = (DIM / THREADS) + start - 1;
+        LifeThread life = new LifeThread(x, start, stop, g1, DIM);
+        life_vec.add(x, life);
+    }
+
+    for(int x = 0; x < THREADS; x++)
+    {
+        life_vec.get(x).start();
+    }   
+
+    for(int x = 0; x < THREADS; x++)
+        life_vec.get(x).join();
+    
+    g1.finishGen();
+  
+}
+//...
+\end{lstlisting}
+This is also due to the positioning of the threaded section. Because it is inside the game loop the main thread deals with copying the ghost cells and swapping the pointers via a call to the Grid method {\bf finishGen()} shown on line 23.
+%Use appendix A from The Art of Multiprocessor Programming.
+
 %\item gcj and javac
 %\item fork, join, yield, sleep
 %\item Overheads? Thread creation - compare to C

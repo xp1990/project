@@ -697,11 +697,16 @@ The barrier in {\it listing 11} on line 11 ensures that all threads gather at th
 \begin{mdframed}
 {\bf Extension box: } I have also implemented a version of the Game of Life using thread {\bf local memory} as opposed to {\bf shared memory}. In this version, after the static work allocation algorithm, each thread is allocated a grid which is stored in its local memory space. This grid is the exact size of the chunk that it needs to process and the chunk from the global state is copied into this local memory array. The idea being that this could be implemented on a distributed parallel processing architecture. Using separate CPUs that only communicate to unzip or zip up the global state arrays. However, the code on a multi-core platform, performs slower than the shared memory version which is not surprising. I feel that it is a brilliant example of {\bf coarse-grained} versus {\bf fine-grained} data structures and whilst I will not talk about it directly in the report my code is in the appendices A.2 lines 169 - 227, lines 375 - 394.
 \end{mdframed}
-\subsubsection{Optimising features}
+\subsubsection{Optimising Compiler Features}
+What exactly {\bf is} an optimising compiler? C, C++, and Go have forms of optimising compilers. All based around {\bf GCC}, the GNU C Compiler. In a very general sense an optimising compiler will sacrifice compile time and the size of the produced object code for increased runtime speed. GCC in particular has 3 levels of optimisation. Some optimisations can be implemented by the programmer such as {\bf function inlining}. The {\bf inline} keyword is put in front of a function prototype and instructs the compiler to replace every call to that function with the actual code. Increasing the size of the object file but reducing the overheads associated with calling the function, returning arguments or any branching that may take place as code is kept local. Another common optimisation occurs in loops. Loop invariant code removal, where the compiler will identify statements inside a loop that may be evaluated on each iteration but may not actually change. The evaluation statement is then moved outside the loop to save on processing. Loop unrolling is similar to function inlining where multiple occurrences of the loop's code is placed in series if the loop is known to iterate for a certain number of times. This reduces the amount of times a condition will have to be checked and also how many times a {\bf goto} or {\bf jump} statement is used in the architecture's object code.
+\subsection{Application of Amdahl's Law}
+Unique to this implementation is that I have also produced a sequential version to act as a comparison. Linking back to section 3.2.2 - A thought process for parellism, I conducted run-time profiling of the sequential code to attempt to attain a figure for the portion of code that is improvable by parallelisation. A quick reminder:\\
+\smallskip
+\centerline{$ S(N) = \frac{1}{(1-P) + \frac{P}{N}} $}
 
-inline/register, O3.
+A more in-depth discussion is available in section 3.2.2 and the output of GProf is available in Appendix A.9. Looking at the flat profile and the call graph, I'm assuming a value for {\bf P} to be 0.991 + 0.9932 / 2 = 0.9921. This is due to the two values reported by GProf for the percentage time spent inside the {\bf process()} function. I am using this figure because during the parallel code it is the {\bf process()} function that is made {\bf concurrent} and independent. It will be run in parallel by a certain number of threads.
 
-
+The value assumed for {\bf P} means that 99\% of the code inside the sequential version of the Game of Life is eligible for improvement. There is however the concern of increasing the {\bf problem size} which happens as the parallel code is produced. This is due to the need for work scheduling and thread synchronisation. This is not taken into account whilst calculating the speed-up as I have no data to suggest its affect. The addition of these tasks will decrease the value of {\bf P} as I am adding code which is not eligible for improvement. The added code for synchronisation and work scheduling cannot be made parallel. 
 \subsubsection{Testing}
 %race condition?
 %\item Language features
@@ -766,7 +771,8 @@ OMP - horrible to debug, evidenced by for loop producing incorrect results. symp
 
 \section{Conclusion}
 %Some sort of choice based on the most appropriate language.
-\section{Bibliography and References}
+\section{Bibliography}
+%Both compiler books!!
 \nocite{*}
 \bibliographystyle{unsrt}
 \bibliography{Project.bib}

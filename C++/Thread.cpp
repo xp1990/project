@@ -1,9 +1,9 @@
 #define VEC 0
-#define BOOL 0
-#define DIM 1024
-#define MAXGEN 10000
+#define BOOL 1
+#define DIM 512
+#define MAXGEN 1000
 #define THREADS 4
-#define FD "1024.dat"
+#define FD "512.dat"
 
 
 #include "boost/thread.hpp"
@@ -15,34 +15,23 @@ double time_spent;
 
 class ThreadClass
 {
-public: // methods
-    /** Constructor
-    *
-    * starts the internal thread running.
-    */
+public:
+
     ThreadClass(int, int, int, Grid*);
     void run();
     int getTid();
     void join();
     
-    /** Destructor
-    *
-    * Blocks until the thread has finished executing, if it hasn't
-    * finished already.
-    */
     ~ThreadClass();
 
-private: // methods
-    /** This is the function that the thread executes.
-    *
-    * The thread will finish when this function returns.
-    */
+private:
+
     void threadMain();
     void processChunk();
 
 
 
-private: // data
+private: //fields
     
     boost::thread internalThread_;
     int tid; 
@@ -52,7 +41,7 @@ private: // data
 
 };
 
-//-----------------------------------------------------------------------------
+
 ThreadClass::ThreadClass(int t, int st, int sp, Grid * g)
 {
 	tid = t;
@@ -60,31 +49,27 @@ ThreadClass::ThreadClass(int t, int st, int sp, Grid * g)
 	stop = sp;
 	g1 = g;
 
-} // Constructor
+} 
 
 ThreadClass::~ThreadClass()
 {
   internalThread_.interrupt();
-  internalThread_.join(); // make damn sure that the internal thread is gone
-                          // before we destroy the class data.
+  internalThread_.join(); 
+  //ensure thread is finished before the destruction happens!                        
 } // Destructor
 
-//-----------------------------------------------------------------------------
 void ThreadClass::threadMain()
 {
   try
   {
-    /* add whatever code you want the thread to execute here. */
 	processChunk();
   }
   catch (boost::thread_interrupted& interruption)
   {
-    // thread was interrupted, this is expected.
 
   }
   catch (std::exception& e)
   {
-    // an unhandled exception reached this point, this constitutes an error
 
   }
 
@@ -165,8 +150,7 @@ int main()
             threadPool[x]->join();
         }
         
-        if(gen != 0)
-            grid->finishGen();
+        grid->finishGen();
     }
     
     

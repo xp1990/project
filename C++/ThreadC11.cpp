@@ -1,9 +1,9 @@
 #define VEC 0
 #define BOOL 1
-#define DIM 32
+#define DIM 512
 #define MAXGEN 10000
 #define THREADS 4
-#define FD "32.dat"
+#define FD "512.dat"
 
 #include <thread>
 #include "Grid.cpp"
@@ -45,8 +45,7 @@ int main()
                 t.join();
         }
         
-        if(gen != 0)
-            grid->finishGen();
+        grid->finishGen();
     }
     
     clock_gettime(CLOCK_MONOTONIC, &time_stop);

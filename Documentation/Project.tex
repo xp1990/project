@@ -81,17 +81,41 @@
 %%% END Article customizations
 
 %%% The "real" document content comes below...
-
-\title{A Comparison and Analysis of Multithreading Language and Library Implementations and Features with Respect to Conway's Game of Life\\Final Year Project}
-\author{Edward Michniak 10233252}
-\date{} % Activate to display a given date or no date (if empty),
+%\usepackage{pdftex}
+%\date{} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
 
 \begin{document}
-\maketitle
+
+\begin{titlepage}
+\begin{center}
+\textsc{\LARGE University of Hertfordshire}\\[0.5cm]
+\textsc{\Large School Of Computer Science}\\[1.5cm]
+\textsc{\Large Modular BSc Honours in Computer Science}\\[1.5cm]
+\textsc{\Large 6COM0282 – Computer Science Project}\\[3cm]
+\textsc{\Large Final Report}\\[0.5cm]
+\textsc{\Large April 2013}\\[3.5cm]
+\textsc{\Large A Comparison and Analysis of Multithreading Language and Library Implementations and Features with Respect to Conway's Game of Life}\\[0.5cm]
+\vfill
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Author:}\\
+E R \textsc{Michniak} \\ 10233252
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Supervisor:} \\
+Colin \textsc{Egan} \\
+\end{flushright}
+\end{minipage}
+\end{center}
+\end{titlepage}
+
 \pagebreak
 \tableofcontents
 \section{Abstract}
+\section{Acknowledgements}
 \section{Introduction}
 With such a large number of choices open to programmers in the context of multi-core programming and writing concurrent code there is no wonder that it can be a bit of a minefield getting started. This investigation is aimed at providing an insight into the relevant features and facilities of popular (and not so popular) multi-threading solutions. Whilst also aiming to provide details of some of the quirks and eccentricities encountered during parallel program design and implementation.
 
@@ -127,6 +151,23 @@ To compare and contrast multi-threading languages and libraries using Conway's G
 \subsection{Project Structure}
 The investigation begins with an in-depth discussion of cellular automata, in particular Conway's Game of Life. This is succeeded by a look at some of the main algorithms that make the game work, in sequential C. 
 \subsection{Test Setup}
+There is a significant amount of testing that will take place. Throughout the implementation and analysis stage, to test stability, efficiency and scalability.
+\smallskip
+\\My test platform:
+\begin{itemize}
+\item Intel Q6600 at 3.0GHz
+\item 6GB of DDR2 at 800MHz
+\item Linux Mint 14 x84-64
+\end{itemize} 
+Compilers, interpreters and runtime environments used:
+\begin{itemize}
+\item GCC - GNU C Compiler
+\item G++ - GNU C++ Compiler
+\item Javac - Java Compiler 
+\item Python2.6 - Python interpreter
+\item GCCGO - Go compiler with a GCC backend
+\item Go - Go Compiler
+\end{itemize}
 \section{Background Research and Algorithm Design}
 \subsection{Life}
 Conway's Game of Life is an example of a {\bf cellular automaton} (CA). This is described \cite[Lesser, Wuensche, 1992 p6]{ref6} as a ``discrete dynamical system which evolves by the iteration of a simple deterministic rule''. When considering constructing a CA there are a few steps one has to follow:
@@ -533,7 +574,6 @@ produce()
     {
         wait();
     }
-    
     queue.push(queueItem *);
 }
 \end{lstlisting}
@@ -713,24 +753,28 @@ The value assumed for {\bf P} means that 99\% of the code inside the sequential 
 \caption{A Graph showing the calculated speed up by application of Amdahl's Law}
 \label{fig: AmdahlGraph}
 \end{figure}
-\subsubsection{Testing}
+\subsubsection{Testing against Amdahl's Law}
 A full table of results is available in the appendices and will be explained during the analysis portion of the report. For now I have included data which attempts to stimulate a discussion about the correctness of Amdahl's law. The settings for the results listed in {\it figure 12} were as follows: dimension, 1024, generations, 10000, using shared memory threads, and optimisation level 3. Referring to the introductory remarks about testing, my system is based on an Intel Q6600 quad-core processor. The greatest number of truly parallel tasks my system is capable of running is four. One thread on each core. Considering this the results are quite promising. {\it Figure 12} shows that a sequential run of the program took nearly 40 seconds to execute. Another run of the code using 2 threads showed a speed up of 1.94 which is very close to the maximum calculated speed up of 1.98. This means that the estimation for {\bf P}, the proportion of code which can be made parallel, can not have been too far off! Looking at the next run with 4 cores the result is not as pleasing with a speed up of 3.03 compared to a calculated speed up of 3.9. Still it is in line with predictions. Alas, my system does not have enough independent computational units to allow any more meaningful results to be processed and 8 threads and above the performance gets gradually worse. This is not surprising as there are significant overheads related to switching a threads state from running to blocked, and with an increased number of threads being created this case would be happening a lot more.
 
 The maximum speed up theoretically possibly from a program where roughly 99\% of the code could be eligible for parallelism is around 126 times faster than a single threaded implementation. This is evidenced by {\it figures 10} and {\it 11} unfortunately I do not have access to a system with 65536 independent cores.
+
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.6]{Speedup.png}
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{Speedup.png}
 \caption{The Speed up by application of Amdahl's Law}
 \label{fig: speedup}
-\end{figure}
-
-\begin{figure}
+\end{subfigure}
+~ 
+\begin{subfigure}[b]{0.48\textwidth}
 \centering
-\includegraphics[scale=0.7]{measured.png}
+\includegraphics[width=\textwidth]{measured.png}
 \caption{The measured speed up}
 \label{fig: measured}
+\end{subfigure}
+\caption{Tables representing calculated and measured speed up}
 \end{figure}
-
 \subsection{Java with Threads}
 Java is one of the most popular languages on the planet. It's simple object-oriented design patterns and extreme portability make it the language of choice for any type of project. The implementation of the Game of Life in this language is inherently, very different to that of a procedural language such as C. The implementation I have produced has three classes. A {\bf Grid} class which houses all of the functionality for creating, reading from, and writing to the global state arrays which are also stored within its structure. The global state arrays, in line with my research are created as Java primitive arrays of type boolean. Next a class called {\bf LifeThread} provides the functionality for actually processing the global state arrays and advancing the game to the next generation. The final class is called {\bf GoL}, this class is the controller and creates instances of the other classes and houses the main game loop. The code is available in full in the appendices A.6.
 
@@ -770,8 +814,65 @@ This is also due to the positioning of the threaded section. Because it is insid
 %\item fork, join, yield, sleep
 %\item Overheads? Thread creation - compare to C
 %\item OOP? Threads as an object?
-\subsection{C++ with Boost}
-\subsection{C++ 11 Threads}
+\subsection{C++}
+The implementations presented in this section use two different libraries and two different design methods. Similar to the Java implementation, I have made use of object-orientation in C++. Both versions utilise a class called {\bf Grid}. This class provides basic functionality for the storing, and management of the global state arrays. It is created inside the main function for both the Boost and C++11 implementations.
+\subsubsection{Boost}
+Boost is a set of libraries which add functionality in C++ programs. Most widely used in this library are the threading features although it is based on, and provides very similar functionality to PThreads. It is a generic wrapper for threading functionality in C++ and whilst PThreads is not a native threading package for windows, code written in Boost::Threads will compile to target architecture specific threading constructs. In windows this is Windows Threads and in Unix this is PThreads. Because of this added portability with written C++ code, Boost has become a very popular library with some of the features making it in to new releases of the language.
+
+The implementation really begins with the {\bf Thread.cpp} file. {\bf Listing} 14 is a look inside the {\bf ThreadClass} class and should look similar to the Java Thread class seen in Appendix A.6. The C++ Boost implementation can be found, in full, in the appendix A.4 and the Grid class A.5.
+\begin{lstlisting}[language=c++, caption={Boost implementation Thread class methods}]
+void ThreadClass::threadMain()
+{
+  try
+  {
+    processChunk();
+  }
+  catch (boost::thread_interrupted& interruption)
+  {}
+  catch (std::exception& e)
+  {}
+
+}
+
+void ThreadClass::run()
+{
+	internalThread_ = boost::thread(&ThreadClass::threadMain, this);
+}
+
+void ThreadClass::join()
+{
+    internalThread_.join();
+}
+\end{lstlisting}
+The big difference is the inclusion of exceptions. This is not supported in PThreads for C. This is also the first time I have used explicit threading with function delegation. This is different from both the paradigms seen so far. In OpenMP I defined a {\bf parallel region}, in Java I created a class that {\bf inherited} thread functionality. In PThreads, Boost, and C++11 threads, the creation of a thread depends on the address of an expected parameter, a callable function. In this case the {\bf threadMain()} function is passed to the boost::thread() constructor, this returns a {\bf handle} of the created thread. As soon as this is done the thread begins execution. The threadMain function then calls the {\bf processChunk()} function which uses a pointer to the Grid class to being processing the relevant cells of the global state.
+
+It should also be noted that the {\bf main()} function for this code is extremely similar to that of the Java implementation. Performing the operations in the same manner in very similar syntax. 
+\subsubsection{C++ 11 Threads}
+C++11, named due to the release being approved in 2011, is unique in that it is the first time the C++ standard library has included support for threads. The newly incorporated {\bf std::thread} class provides functionality for all the standard array of creation, management, and synchronisation for threads. Even as similar as this method may be to the older Boost library, I have chosen to use a different program structure.
+\begin{lstlisting}[language=c++, caption={Main game loop from C++ 11 implementation}]
+//...    
+vector<std::thread> threadPool;
+//...
+for (int gen = 0; gen < MAXGEN; gen ++)
+{
+    for(int x = 0; x < THREADS; x++)
+    {
+        int start = ((DIM / THREADS) * x) + 1;
+        int stop = (DIM / THREADS) + start - 1;
+
+        threadPool.push_back(std::thread(processChunkExtern, start, stop, grid));
+    }
+    
+    for (auto &t : threadPool)
+    {
+        if(t.joinable())
+            t.join();
+    }
+    
+    grid->finishGen();
+}
+\end{lstlisting}
+This structure focuses on the explicit delegation of functions to threads. The {\bf ThreadC11.cpp} file only has an {\bf inline void processChunkExtern()} and {\bf int main()}. Some of the contents of main are shown in {\bf listing 15}. Line 2 shows the declaration of a vector of type std::thread
 \subsection{Go and Goroutines}
 \subsection{Python}
 %\item List comprehension
@@ -780,7 +881,12 @@ This is also due to the positioning of the threaded section. Because it is insid
 %\item The other paradigm? Fetching a 3x3 block of cells. Processing them, return the result... 
 
 %\subsection{C with CUDA}
+
+MENTION BUILD ARRAY.C!!
+
 \section{Analysis}
+
+% In OpenMP I defined a {\bf parallel region}, in Java I created a class that {\bf inherited} thread functionality. In PThreads, Boost, and C++11 threads, the creation of a thread depends on the address of an expected parameter, a callable function.
 
 Head sub sections with each core value and talk about each language for at most 2 - 3 lines.
 

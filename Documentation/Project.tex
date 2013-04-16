@@ -848,7 +848,7 @@ The big difference is the inclusion of exceptions. This is not supported in PThr
 
 It should also be noted that the {\bf main()} function for this code is extremely similar to that of the Java implementation. Performing the operations in the same manner in very similar syntax. 
 \subsubsection{C++ 11 Threads}
-C++11, named due to the release being approved in 2011, is unique in that it is the first time the C++ standard library has included support for threads. The newly incorporated {\bf std::thread} class provides functionality for all the standard array of creation, management, and synchronisation for threads. Even as similar as this method may be to the older Boost library, I have chosen to use a different program structure.
+C++11, named due to the release being approved in 2011, is unique in that it is the first time the C++ standard library has included support for threads. The newly incorporated {\bf std::thread} class provides functionality for all the standard array of creation, management, and synchronisation for threads. Even as similar as this method may be to the older Boost library, I have chosen to use a different program structure. See Appendix A.3 for a full code listing.
 \begin{lstlisting}[language=c++, caption={Main game loop from C++ 11 implementation}]
 //...    
 vector<std::thread> threadPool;
@@ -872,8 +872,44 @@ for (int gen = 0; gen < MAXGEN; gen ++)
     grid->finishGen();
 }
 \end{lstlisting}
-This structure focuses on the explicit delegation of functions to threads. The {\bf ThreadC11.cpp} file only has an {\bf inline void processChunkExtern()} and {\bf int main()}. Some of the contents of main are shown in {\bf listing 15}. Line 2 shows the declaration of a vector of type std::thread
+This structure focuses on the explicit delegation of functions to threads. The {\bf ThreadC11.cpp} file only has an {\bf inline void processChunkExtern()} and {\bf int main()}. Some of the contents of main are shown in {\bf listing 15}. Line 2 shows the declaration of a vector of type std::thread that acts as the thread pool. This holds the initialised threads. In the same way that Java and Boost allocate then join the threads. C++11 does the work allocation on lines 8 and 9, then creates the threads and pushes them into the vector on line 11. This also starts the threads executing the function given by the first parameter. Along with the first parameter the thread is also give the {\bf start}, {\bf stop}, and {\bf grid} parameters. These are treated as arguments to the processChunkExtern function. The std::thread constructor supports variadic parameter passing, in that any number of parameters can be passed. This is different to boost, because the work allocation variables and the grid object reference were stored in the ThreadClass initially so the thread creation only required the passing of a function reference for the thread to begin.
+\bigskip
+\begin{mdframed}
+{\bf Knowledge Box:} Another inclusion as part of the C++11 release was automatic {\bf type inference}. This can be seen in {\it listing 15} line 14 and is indicated by the {\bf auto} keyword. In this line a for each loop is being instantiated with members of the threadPool and each object is assigned to the automatically typed variable {\bf t}. This is an extremely useful feature and simplifies of using somewhat ambiguously typed data structures.
+\end{mdframed}
 \subsection{Go and Goroutines}
+Go is a relatively new language that has aspirations of becoming a new type of systems language, with a unique twist; the type system. Whilst being statically checked it also has many elements that are common to a dynamically checked language. In addition to this its take on concurrency is a very unique. Instead of threads running a single function and then ceasing to exist when the function returns {\bf goroutines} are dispatched with a function and can have {\bf channels} open which represent communication and can be used typed and carry work or messages back and forth. However this is not necessary for this implementation, the code is still extremely interesting. There is far more which I wanted to put in that is just as interesting but unfortunately out of scope. Like the way Go handles loops and variadic function calls. See Appendix A.8 for a full code listing.
+\begin{lstlisting}[language=C, caption={Go and Goroutines, Game of Life Main Game Loop}]
+var wg sync.WaitGroup
+
+type thread struct{
+  Id, St, Sp int
+}
+
+for x:=0; x < threads; x++ {
+    st := ((dim / threads) * x) + 1
+    sp := (dim / threads) + st - 1
+    threadPool[x] = &thread{ x, st, sp}
+}
+
+for i < gen {
+    copyGhostCells()
+    for x:= 0; x < threads; x++ {
+      wg.Add(1)
+      go processGrid(threadPool[x])
+    }
+    wg.Wait()
+    copySlice()
+    i++
+}  
+\end{lstlisting}
+Lines 3 - 4 in {\it listing 16} show the creation of a new type, a {\bf strcut}. This struct is one of the basic building blocks of the Go language and is different to every other language implemented in this report. It can define a type that holds fields and a struct can also have behaviour by having methods defined using it as a {\bf receiver}. The closest construct this is comparable to is a {\bf class}, however there is no concept of an object or inheritance. The defined type {\bf thread} has three fields associated with it, Id, St, and Sp. The initial character being a upper-case signifies that the fields are accessible outside of the package. 
+
+Line 1 in shows the creation of a {\bf waitGroup}. A unique concept for the Go language that essentially acts as a way of synchronising goroutines. Its closest semantic match is a {\bf barrier} directive from OpenMP. When a goroutine is dispatched with a function the {\bf wg.Add(1)} statement is executed which increments a counter. When the goroutine completes a sister function {\bf wg.Done()} is called, this decrements the counter. The main thread of execution will wait at the call {\bf wg.Wait()} until the counter is equal to zero again. A simple but powerful synchronisation mechanism. Line 17 dispatches the goroutines with as many threads that have been created and the chunks are processed.
+\begin{mdframed}
+{\bf Knowledge Box:} There are currently two compilers available for Go language source code. GCCGO, which has a GCC backend and thus incorporates the optimising features of the C compiler. Or the Go compiler, which has a certain level of optimisation, however this is not mutable by the programmer.
+\end{mdframed}
+
 \subsection{Python}
 %\item List comprehension
 %\item Parallel processing?

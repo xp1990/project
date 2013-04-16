@@ -1,6 +1,7 @@
 package main
 
 import (
+    "runtime"
     "strings"
     "io/ioutil"
     "fmt"
@@ -28,6 +29,10 @@ func main() {
     grid[i] = make([]bool, dim+2)
     new_grid[i] = make([]bool, dim+2)
   }
+  /*necessary to increase the amount of 
+   *goroutines that can be mapped to OS threads
+   */
+  runtime.GOMAXPROCS(threads)
   
   //read in the entire file contents
   content, err := ioutil.ReadFile(fd)
@@ -115,7 +120,6 @@ func processGrid(t * thread) {
   for x:= t.St; x <= t.Sp; x++ {
     for y:= 1; y <= dim; y++ {
       count := addBool(grid[x - 1][y - 1], grid[x - 1][y], grid[x - 1][y + 1], grid[x][y - 1], grid[x][y + 1], grid[x + 1][y - 1], grid[x + 1][y], grid[x + 1][y + 1])
-      //fmt.Println(count)
       switch count {
         case 0,1,4,5,6,7,8:   new_grid[x][y] = false
         case 3:               new_grid[x][y] = true

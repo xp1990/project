@@ -6,22 +6,29 @@
 #include <math.h>
 #include <stdbool.h>
 
-#define MAXGEN 10000
-#define DIM 512
-#define LIFE 3
-#define BOOL 1
-#define SEED 2012
-#define THREADS 2
-#define SHARED 1
-#define INLINE 1
-#define REGISTER 0
-#define FILENAME "512.dat"
 
-struct timespec begin, end;
+#define MAXGEN 1000 //number of generations to process
+#define DIM 1024 //dimension of the grid
+#define LIFE 3 //probability of life if random generation is used
+#define BOOL 1 //use bool for arrays, if not use int.
+#define SEED 2012 //seed for random life generation
+#define THREADS 8 //number of threads to create for parallel region
+#define SHARED 1 //shared or local memory implementation
+#define INLINE 1 //use inline functions 
+#define REGISTER 0 //instruct compiler to store global state arrays in registers
+#define FILENAME "1024.dat" //filename to read from
+
+//var for time measurement
+struct timespec begin, end; 
 int cell_count, life_count;
 double time_spent;
+
+//var for holding threads
 unsigned int nthreads;
 
+/*
+ * Conditional compilation declaration of function prototypes
+ */
 
 #if BOOL == 1
 void readFile (char *, bool **);
@@ -87,10 +94,7 @@ main (int argc, char *argv[])
     /*main game vars */
     int i, j, gen;
 
-    /*in c a 2d grid is an array of pointers to pointers of ints
-    *here we allocate enough space for our temp transfer grid and
-    *our original grid
-    */
+    /* Allocate the memory for the global state arrays */
     #if BOOL == 1
     grid = (bool **) calloc (DIM + 2, sizeof (bool *));
     new_grid = (bool **) calloc (DIM + 2, sizeof (bool *));
@@ -133,6 +137,7 @@ main (int argc, char *argv[])
     #if SHARED == 1
     #pragma omp parallel shared(grid_ptr, new_grid_ptr, temp_ptr, nthreads) private(gen, tid, start, stop)  num_threads(nthreads)
     {
+        //store the threads identifier in local memory variable
         tid = omp_get_thread_num ();
 
         /*define the amount of work for each thread */
@@ -144,19 +149,20 @@ main (int argc, char *argv[])
 
         for (gen = 0; gen < MAXGEN; gen++)
         {
-            /*only executed by thread 0 */
-            //if (tid == 0)
-            //#pragma omp barriers
-            
+            /*only executed by one thread */
             #pragma omp single
             {
+                //copy the ghost cells
                 copyGhostCells(grid_ptr);
-            }
+            } //implied barrier
             
+            //process chunk using start and stop as limits
             process (grid_ptr, new_grid_ptr, start, stop, tid);
 
+            //sync
             #pragma omp barrier
             
+            //swap pointers
             #pragma omp single
             {
                 temp_ptr = grid_ptr;
@@ -183,16 +189,10 @@ main (int argc, char *argv[])
         /*number of int pointers need to store */
         pg_size = stop - start + 1 + 2;
 
-        /*BIG NOTE! Calloc is the key!!
-        *It allocates memory and initialises it!! 0's Everywhere!
-        *Malloc did not work!
-        */
-
         /*private grid declaration */
         priv_grid = (bool **) calloc (pg_size, sizeof (bool *) * (pg_size));
         for (pg = start - 1; pg <= stop + 1; pg++)
         {
-            //printf("thread: %d, row: %d\n", tid, pg);
             priv_grid[pg] = (bool *) malloc (sizeof (bool *) * (DIM + 2));
         }
         
@@ -200,16 +200,13 @@ main (int argc, char *argv[])
         
         for (gen = 0; gen < MAXGEN; gen++)
         {
-            //if (tid == 0)
             #pragma omp single
             {
                 copyGhostCells(grid_ptr);
             }
-            //printf("beginning private memory copy...\n");
             
+            //copy chunk of global state to private memory array
             privMemCopy (start, stop, priv_grid, grid_ptr);
-
-            //printf("Copied grid to private thread memory\n");
 
             #pragma omp barrier
 
@@ -229,18 +226,22 @@ main (int argc, char *argv[])
 #endif
 //end selective compilation
 
-  clock_gettime (CLOCK_MONOTONIC, &end);
-  time_spent = (end.tv_sec - begin.tv_sec);
-  time_spent = time_spent + (end.tv_nsec - begin.tv_nsec) / 1000000000.0;
+    //get time spent
+    clock_gettime (CLOCK_MONOTONIC, &end);
+    time_spent = (end.tv_sec - begin.tv_sec);
+    time_spent = time_spent + (end.tv_nsec - begin.tv_nsec) / 1000000000.0;
 
-  printGrid (grid_ptr);
-  printf ("\nCells: %d\nAlive: %d\n", cell_count, life_count);
+    //print alive count
+    printGrid (grid_ptr);
+    printf ("\nCells: %d\nAlive: %d\n", cell_count, life_count);
 
-  printf ("\nTime taken with %d threads is: %f\n", nthreads, time_spent);
+    //print time
+    printf ("\nTime taken with %d threads is: %f\n", nthreads, time_spent);
 
-  free(grid);
-  free(new_grid);
-  return (0);
+    //free memory for global state arrays
+    free(grid);
+    free(new_grid);
+    return (0);
 }
 
 #if INLINE == 1 && BOOL == 1
@@ -340,22 +341,21 @@ process (int **grid_ptr, int **new_grid_ptr, int start, int stop, int tid)
 #endif
 {
 
-  /*this can be made more efficient! produce two versions using compiler flags.
-   *second version will break loop after a condition is met... 
-   */
+    int i, j, count;
 
-  int i, j, count;
-
+    //iterate on the rows selected by the for start and stop vars
     for (i = start; i <= stop; i++)
     {
         for (j = 1; j <= DIM; j++)
         {
+            //add up the moor-neighbourhood
             count =
             grid_ptr[i - 1][j - 1] + grid_ptr[i - 1][j] +
             grid_ptr[i - 1][j + 1] + grid_ptr[i][j - 1] +
             grid_ptr[i][j + 1] + grid_ptr[i + 1][j - 1] +
             grid_ptr[i + 1][j] + grid_ptr[i + 1][j + 1];
 
+            //apply the rules and write-back the result to the new_grid
             if (count == 3)
             {
                 new_grid_ptr[i][j] = 1;

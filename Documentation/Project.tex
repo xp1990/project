@@ -130,8 +130,10 @@ Colin \textsc{Egan} \\
 \tableofcontents
 \pagebreak
 \section{Abstract}
+\pagebreak
 \section{Acknowledgements}
 Colin Egan - For all his help and support in making this project.
+\pagebreak
 \section{Introduction}
 With such a large number of choices open to programmers in the context of multi-core programming and writing concurrent code there is no wonder that it can be a bit of a minefield getting started. This investigation is aimed at providing an insight into the relevant features and facilities of popular (and not so popular) multi-threading solutions. Whilst also aiming to provide details of some of the quirks and eccentricities encountered during parallel program design and implementation.
 
@@ -268,9 +270,11 @@ These laws are going to form the basis of the {\bf transition function} which wi
 \label{fig: Gosper}
 \end{figure}
 \\Why code? Even smallest grid requires a lot of time and effort to move from one generation to the next. Consider the configuration in the grid above and try to process a single generation using a manual method. Boring, repetitive and tedious isn't it? Thankfully computers excel at boring and repetitive tasks that humans find tedious. Also, it's interesting! There's no end to the different implementations that could be written to change some way in which the system executes. Finally, the most common implementation of the Game of Life would involve the allocation of some array structure, and considering the layout of computer memory this is very intuitive and easy to do.\\
+\begin{figure}
 \begin{mdframed}
-{\bf Extension Box:} There is a vast number of different algorithms that could be implemented. For example, Hashlife, quad-trees, linked-list, bit-stream... An extension could be researched into the relative performance of different algorithms in specific languages and the language features which benefit or hinder execution. My pseudo-algorithm will be outlined later on however I will be focusing on realising and defining parallel points in the program execution and discussing the syntax, semantics and effectiveness for respective implementations. 
+{\bf Extension Box:} There is a vast number of different algorithms that could be implemented. For example, Hashlife, quad-trees, linked-list, bit-stream... An extension could be researched into the relative performance of different algorithms in specific languages and the language features which benefit or hinder execution. My pseudo-algorithm will be outlined later on however I will be focusing on realising and defining parallel points in the program execution and discussing the syntax, semantics and effectiveness for respective implementations.
 \end{mdframed} 
+\end{figure} 
 \subsection{Prototype Code, Parallelism Research and Algorithm Development}
 A prototype sequential version of the Game of Life has been produced as part of my research into the algorithms available and memory structures I could have used. This version has been produced in C and can be broken down into a few abstract, yet simple, operations. This example is an illustration of one of the most basic of programming paradigms, {\bf sequential composition}. This is described by \cite[Chandry and Taylor, p68]{ref9} as when components are executed in order, one after the other. The composition terminates when the last component terminates. Considering components as individual sub-programs or functions in our C code. We can begin to see how the Game of Life may be executed sequentially. And quite slowly for that matter! Referencing {\it figure 4} we can see the {\bf sub-programs} or {\bf components} that make up the sequential algorithm for the Game of Life. I will talk about some of the more interesting and prominent snippets of code from this early implementation, however a full listing will be available, line-numbered and commented, in the appendix A.1.\\
 \begin{figure}[h]
@@ -285,6 +289,8 @@ A prototype sequential version of the Game of Life has been produced as part of 
 \begin{mdframed}
 {\bf Knowledge Box:} The '{\bf \#}' symbol denotes a {\bf preprocessor macro}. I have used these extensively in my prototype code. It is a way of instructing the compiler, if certain conditions are met, which code to include or exclude from compilation. This is known as conditional compilation. It is especially useful, in the case highlighted below, when experimenting with different types as some blocks of code may stay the same however the prototypes or function declarations may change. Initially a {\bf macro} is defined at the top of the program and then tested in the main code block. This can be seen in appendix A.1 lines[12,13], lines[26-34], and lines[147-151].
 \end{mdframed}
+\bigskip
+\begin{figure}[h]
 \begin{lstlisting}[language=C,caption={Array allocation using {\it malloc}, {\it calloc}, and {\it bool}}, morekeywords={malloc,calloc,bool}]
 #if USEBOOL == 0
     #if MALLOC == 1      
@@ -317,6 +323,7 @@ A prototype sequential version of the Game of Life has been produced as part of 
     }
 #endif
 \end{lstlisting}
+\end{figure}
 In {\it listing 1} we begin to understand the plethora of options that are open to implementation in the considered context of {\bf array memory allocation} (We haven't even considered any of the other memory structures!). The general convention for all 3 blocks of code is the same, that we need to allocate a memory block for each of our pointers, {\it grid} and {\it new\_grid}, to address. The only things that change are the functions used for allocation, {\bf malloc} or {\bf calloc}, or the parameter passed to {\bf sizeof}.
 \begin{itemize}
 \item {\bf Malloc} will take one argument, the size in bytes of the memory to allocate. It returns a void pointer to the block of memory which is then cast to the type that we wish to use. In the case of line 3 it is the pointer to a pointer of int values. 
@@ -330,7 +337,7 @@ In {\it listing 1} we begin to understand the plethora of options that are open 
 \begin{mdframed}
 {\bf Knowledge Box:} Type-safety really takes the back-seat when programming in C! When we say something is {\bf type safe} we mean that the language guarantees that a value of one type can't be incorrectly used as if it were another type. This makes C very type {\bf unsafe}! Casting a pointer to another type allows the programmer to use it as that type even though the actual value could mean absolutely nothing. Also the function {\bf free} allows the programmer to deallocate memory and reassign a pointers and possibly use them later. The concept of {\bf casting} and {\bf dangling pointers} means that C can never be type safe! \cite[PLDI B, Lane]{ref11}
 \end{mdframed}
-\smallskip
+\bigskip
 After the array is allocated the next step in the Game of Life algorithm is to assign an initial global state to the grid by {\bf randomly spacing life forms in the array}. In the sequential program this is done by choosing a probability of life existing and randomly (not actually random at all - but that's another project!) placing live or dead cells. The function in {\it listing 2} iterates through the array using nested for-loops. Remember the allocation of the memory from the last code snippet? The parameters given to the malloc or calloc functions are DIM + 2 in size each time! This is because of my design decision to use a orthogonal toroidal array, which gives the grid cyclic boundary conditions. The grid has to have an extra 2 rows and an extra 2 columns to house the {\bf ghost cells} which will be explained shortly.
 \begin{lstlisting}[language=C,caption={Randomly spacing lifeforms in the array}, morekeywords={malloc,calloc,bool}]
 #if USEBOOL == 1
@@ -428,9 +435,11 @@ These blocks of code have helped me make some fairly crucial design decisions on
 \subsubsection{A Thought Process for Parallelism}
 Why do we make code parallel? So we can increase the speed at which a process or program can execute, of course! There are three main levels of parallelism: {\bf instruction-level parallelism}, {\bf data parallelism}, and {\bf task parallelism}. Where instruction-level parallelism represents instruction pipelining, branch prediction, or super-scalar architectures \cite[Patterson, Hennessy, p41]{ref10}. Task parallelism is the simultaneous processing of different tasks (or processes). Data parallelism, the beast that I am concerned with, is the decomposition of data into smaller blocks so that work can be carried out on them in parallel by separate processing units \cite[Patterson, Hennessy, A-17]{ref10}.
 \bigskip
+\begin{figure}[h]
 \begin{mdframed}
 {\bf Knowledge Box:} It is important to make a distinction between {\bf parallelism} and {\bf concurrency} even though it is common to use the two terms interchangeably. Concurrency is about dealing with many things at once, whereas parallelism is about executing two or more things at the same time. In concurrently structured programs the design is not automatically parallel. A concurrent task is one that is independent and {\bf concurrent decomposition} deals with breaking a program into pieces that can be executed independently.  Concurrently structured code can be parallel! Although if it is parallel it is a symptom of the environment and not necessarily the code produced. An example of this would be that single-core processors can run code in a concurrent manner, or in a way that may seem parallel even though it is not. \cite{ref12} Thus it is correct to say that parallelism is a subset of concurrency. 
 \end{mdframed}
+\end{figure}
 \bigskip
 When we begin to think about realising and adapting the program to run in a parallel manner there are a few design processes and activities to consider before writing. {\bf Partitioning} involves dividing up the program into components that will allow parallelism then {\bf granularity} is adjusting the ratio of computation to communication for these parallel components and then {\bf mapping} this refactored design to computational units. \cite[p77,78]{ref9} A quantitative approach can be achieved by identifying code that {\bf can} be made parallel and code that {\bf can't} be made parallel. The application of this quantitative method is known as {\bf Amdahl's Law}. In the context of the prototype, a prediction on speed-up can be made my analysing the amount of time an entire run of the program spends in the cell processing phase and the amount of time the program spends executing code that can only ever be sequential.
 \bigskip
@@ -975,7 +984,7 @@ I have provided a qualitative and quantitative analysis of the produced implemen
 
 C with OpenMP has proved to be the most efficient and simple to code in. The unique facility of a parallel region makes producing parallel code simple and fast. However it is not very portable, any code created in this paradigm will suffer from being tied to one implementation. It also suffers from being terrible to debug, a symptom of the implicit threading paradigm.
 
-C++ on the other hand also offers fast and efficient performance only slightly slower than C, and also a more generic programming interface, with the newly released C++ 11, Boost, and object-oriented design. It truly is a powerful, and portable language.
+C++ on the other hand offers fast and efficient performance only slightly slower than C, and also a more generic programming interface, with the newly released C++ 11, Boost, and object-oriented design. It truly is a powerful, and portable language.
 
 I was very impressed with Go. It was extremely easy to use, and the flexibility offered by the dynamic features makes creating code very fast and simple. The lack of a type hierarchy made having access to data simple and the creation of a goroutine was easy and concise. It's a shame about the performance and I can only hope that it gets better with newer releases.
 
@@ -983,11 +992,20 @@ The overall answer is, don't use Java. It is restrictive, and verbose, it doesn'
 
 %Some sort of choice based on the most appropriate language.
 \section*{Reflection}
-I have learnt a vast amount about creating concurrent components, parallel processing and the languages and libraries required to implement them. Planning this project has been key to its success. I have used Git exclusively and there are commit logs and data included in the appendices.
+I have learnt a vast amount about creating concurrent components, parallel processing and the languages and libraries required to implement them. Planning this project has been key to its success. I have used Git as a project management tool, details of my use are in the appendices A.18.
 
-I could improve on
-%GIT, Problems, 
+The project was very ambitious, it could have benefited from a more constrained scope from the outset. I am happy with the result however I think a better analysis could have been achieved if I had chosen to undertake less work.
+
+I typeset the entire project using the \LaTeX package and TeXstudio environment. I have learnt a considerable amount using this package and now would not consider producing a document without it.
 \section*{Extensions and Future Investigations}
+Throughout the project I have listed possible further work that could have been conducted through the use of {\bf extension boxes}. There are however a few of these which I am eager to pursue in my own time. Firstly an investigation into the use of a specific array data type and its affect on performance. I conducted preliminary research into this area (appendix A.16), however I feel it could be a very promising area and help to continue my professional development.
+
+Also, listed in appendix A.17, was my research into dynamic work allocation algorithms. This is the obvious next step in extending the parallel algorithm. 
+
+The final area in which I would like to research is distributed systems and how this may perform using a much larger, more powerful, array of computational units. My research into a local memory version of the Game of Life is available in Appendix A.2 lines 175 - 224.
+
+A full code listing, commit logs, and tex files are available on my github page for public access. https://github.com/xp1990/
+\pagebreak
 \section{Bibliography}
 %Both compiler books!!
 \nocite{*}
@@ -1477,6 +1495,11 @@ Speed Up & 2.9611924974 & 2.9427808685 & 3.7339972943 & 2.7009084907 \\ [1ex]
 \pagebreak
 \subsection{Consumer/Producer and Dynamic Work Allocation Discussion}
 \input{dynamic}
+\pagebreak
+\subsection{Git Graphs and Logs}
+\includegraphics[scale=0.35]{git1}\\
+\includegraphics[scale=0.35]{git2}\\
+\includegraphics[scale=0.35]{git3}
 \pagebreak
 \section{Glossary}
 %\glossary{glossary}

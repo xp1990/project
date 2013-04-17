@@ -68,6 +68,10 @@
 \lhead{}\chead{}\rhead{}
 \lfoot{}\cfoot{\thepage}\rfoot{}
 
+\usepackage[xindy]{glossaries}
+\include{glossary}
+\makeglossaries
+
 %%% SECTION TITLE APPEARANCE
 \usepackage{sectsty}
 \allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
@@ -161,7 +165,7 @@ There is a significant amount of testing that will take place. Throughout the im
 \end{itemize} 
 Compilers, interpreters and runtime environments used:
 \begin{itemize}
-\item GCC - GNU C Compiler
+\item \gls{GCC} - GNU C Compiler
 \item G++ - GNU C++ Compiler
 \item Javac - Java Compiler 
 \item Python2.6 - Python interpreter
@@ -990,6 +994,9 @@ Every language was tested using 1, 2, 4, and 8 threads using either 512 or 1024 
 \nocite{*}
 \bibliographystyle{unsrt}
 \bibliography{Project.bib}
+\glsaddall
+\printglossaries
+\pagebreak
 \appendix
 \pagebreak
 \section{Appendices}

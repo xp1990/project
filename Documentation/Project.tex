@@ -1137,7 +1137,7 @@ Index by function name
 \subsection{Test Results}
 \begin{table}[ht]
 
-\caption{Dimension: 1024, Generations: 1000 Threads: 1\\Global State at 1000 generations is 44790 alive cells} % title of Table
+\caption{Dimension: 1024, Generations: 1000, Threads: 1\\Global State at 1000 generations is 44790 alive cells} % title of Table
 
 \centering % used for centering table
 
@@ -1165,7 +1165,7 @@ Average & 5.7113684 & 5.7808238 & 4.5569676 & 9.084 & 100.68722 \\ [1ex]
 \end{table}
 \begin{table}[ht]
 
-\caption{Dimension: 1024, Generations: 1000 Threads: 2\\Global State at 1000 generations is 44790 alive cells} % title of Table
+\caption{Dimension: 1024, Generations: 1000, Threads: 2\\Global State at 1000 generations is 44790 alive cells} % title of Table
 
 \centering % used for centering table
 
@@ -1195,7 +1195,7 @@ Speed Up & 1.8730063574 & 1.8520010326 & 1.933776859 & 1.9416894665 & 1.38210367
 \end{table}
 \begin{table}[ht]
 
-\caption{Dimension: 1024, Generations: 1000 Threads: 2\\Global State at 1000 generations is 44790 alive cells} % title of Table
+\caption{Dimension: 1024, Generations: 1000, Threads: 4\\Global State at 1000 generations is 44790 alive cells} % title of Table
 
 \centering % used for centering table
 
@@ -1214,21 +1214,124 @@ Test & C++ 11 & C++ Boost & C OpenMP & Java & Go \\ [0.5ex] % inserts table
 3 & 2.092156 & 2.096594 & 1.401127 & 3.94 & 94.5871 \\
 4 & 2.083783 & 2.098059 & 1.474601 & 3.879 & 94.9951 \\
 5 & 2.087061 & 2.102909 & 1.404484 & 3.881 & 95.2215 \\
-Average & 2.1214254	2.1112998	1.4063152	3.8896	95.09736
-Speed Up & 2.6922315534	2.7380402347	3.2403600558	2.335458659	1.058780391
-
-2 & 
-3 & 
-4 & 
-5 & 
-Average & 
-Speed Up & 
+Average & 2.1214254 & 2.1112998 & 1.4063152 & 3.8896 & 95.09736 \\
+Speed Up & 2.6922315534 & 2.7380402347 & 3.2403600558 & 2.335458659 & 1.058780391 \\ [1ex]
 
 
 \hline %inserts single line
 
 \end{tabular}
+\end{table}
+\pagebreak
+\begin{table}[ht]
 
+\caption{Dimension: 2048, Generations: 1000, Threads: 1\\Global State at 1000 generations is 180192 alive cells} % title of Table
+
+\centering % used for centering table
+
+\begin{tabular}{c c c c c} % centered columns (4 columns)
+
+\hline\hline %inserts double horizontal lines
+
+Test & C++ 11 & C++ Boost & C OpenMP & Java \\ [0.5ex] % inserts table 
+
+%heading
+
+\hline % inserts single horizontal line
+
+1 & 23.64823 & 23.755266 & 18.468408 & 35.117 \\
+2 & 23.64879 & 23.754745 & 18.424642 & 35.209 \\
+3 & 23.606505 & 23.773273 & 18.425841 & 35.025 \\
+4 & 23.596945 & 23.764332 & 18.465193 & 34.991 \\
+5 & 23.583807 & 23.810464 & 18.433137 & 35.67 \\
+Average & 23.6168554 & 23.771616 & 18.4434442 & 35.2024 \\ [1ex]
+
+
+
+\hline %inserts single line
+
+\end{tabular}
+\end{table}
+\begin{table}[ht]
+
+\caption{Dimension: 2048, Generations: 1000, Threads: 2\\Global State at 1000 generations is 180192 alive cells} % title of Table
+
+\centering % used for centering table
+
+\begin{tabular}{c c c c c} % centered columns (4 columns)
+
+\hline\hline %inserts double horizontal lines
+
+Test & C++ 11 & C++ Boost & C OpenMP & Java \\ [0.5ex] % inserts table 
+
+%heading
+
+\hline % inserts single horizontal line
+
+1 & 13.73039 & 14.013883 & 9.371935 & 19.719 \\
+2 & 13.740023 & 13.911092 & 9.384064 & 19.802 \\
+3 & 13.720766 & 13.941342 & 9.370194 & 19.8 \\
+4 & 13.777311 & 13.958943 & 9.400541 & 20.005 \\
+5 & 13.769952 & 13.915513 & 9.40014 & 19.719 \\
+Average & 13.7476884 & 13.9481546 & 9.3853748 & 19.809 \\
+Speed Up & 1.7178782871 & 1.7042839488 & 1.9651260171 & 1.7770912212 \\ [1ex]
+
+
+
+
+\hline %inserts single line
+
+\end{tabular}
+\end{table}
+\begin{table}[ht]
+
+\caption{Dimension: 2048, Generations: 1000, Threads: 4\\Global State at 1000 generations is 180192 alive cells} % title of Table
+
+\centering % used for centering table
+
+\begin{tabular}{c c c c c} % centered columns (4 columns)
+
+\hline\hline %inserts double horizontal lines
+
+Test & C++ 11 & C++ Boost & C OpenMP & Java \\ [0.5ex] % inserts table 
+
+%heading
+
+\hline % inserts single horizontal line
+
+1 & 9.008888 & 9.105704 & 4.911145 & 14.523 \\
+2 & 9.032154 & 9.097899 & 4.939797 & 14.128 \\
+3 & 8.9769 & 9.149642 & 4.923635 & 14.254 \\
+4 & 9.058067 & 9.122737 & 4.927098 & 14.851 \\
+5 & 9.065694 & 9.093698 & 4.972541 & 14.787 \\
+Average & 9.0283406 & 9.113936 & 4.9348432 & 14.5086 \\
+Speed Up & 2.6158578244 & 2.6082711136 & 3.7373921425 & 2.4263126697 \\ [1ex]
+
+\hline %inserts single line
+
+\end{tabular}
+\end{table}
+\begin{table}[ht]
+
+\caption{Dimension: 2048, Generations: 10000, Threads: 1\\Global State at 1000 generations is 180192 alive cells} % title of Table
+
+\centering % used for centering table
+
+\begin{tabular}{c c c c c} % centered columns (4 columns)
+
+\hline\hline %inserts double horizontal lines
+
+Test & C++ 11 & C++ Boost & C OpenMP & Java \\ [0.5ex] % inserts table 
+
+%heading
+
+\hline % inserts single horizontal line
+
+1 & 
+
+\hline %inserts single line
+
+\end{tabular}
 \end{table}
 \subsection{Valgrind output}
 \includegraphics[scale=0.5]{valgrind1.png}\\

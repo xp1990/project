@@ -955,11 +955,31 @@ MENTION BUILD ARRAY.C!!
 
 \section{Analysis}
 \subsection{Testing Procedure}
-Every language was tested using 1, 2, 4, and 8 threads using either 512 or 1024 sized grids. The number of generations was either 1000 or 10000. The procedure for producing a result which I deemed ``correct'' was as follows:
+Every language was tested using 1, 2, and 4 threads using either 1024 or 2048 dimensioned grids. The number of generations was either 1000 or 10000. The procedure for producing a result which I deemed ``correct'' was as follows:
 \begin{itemize}
 \item Build grid of specified size using {\bf buildArray.c} to generate *.dat file
 \item Run the Python Game of Life, GoL.py, to assertain correct number of ``alive'' cells after X number of iterations.
 \end{itemize}
+\subsection{Results}
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}[b]{0.8\textwidth}
+\centering
+\includegraphics[width=\textwidth]{measuredSpeedup2048.png}
+\caption{The Measured Speed Up across all implementations on 2048 size grid}
+\label{fig: speedup1}
+\end{subfigure}
+~ 
+\begin{subfigure}[b]{1\textwidth}
+\centering
+\includegraphics[width=\textwidth]{measured204810004.png}
+\caption{The Measured Times across all implementations on a 2048 size grid}
+\label{fig: measured1}
+\end{subfigure}
+\centering{
+\caption{Graphs showing measured speed up and measured timing of implmentations processing a 2048 grid, 1000 generations}}
+\end{figure}
 \subsection{Efficiency}
 \subsection{Scalability}
 \subsection{Simplicity}
@@ -1114,6 +1134,102 @@ Index by function name
 \end{verbatim}
 \endgroup
 \pagebreak
+\subsection{Test Results}
+\begin{table}[ht]
+
+\caption{Dimension: 1024, Generations: 1000 Threads: 1\\Global State at 1000 generations is 44790 alive cells} % title of Table
+
+\centering % used for centering table
+
+\begin{tabular}{c c c c c c} % centered columns (4 columns)
+
+\hline\hline %inserts double horizontal lines
+
+Test & C++ 11 & C++ Boost & C OpenMP & Java & Go \\ [0.5ex] % inserts table 
+
+%heading
+
+\hline % inserts single horizontal line
+
+1 & 5.718475 & 5.765054	& 4.554163 & 9.463 & 101.2006 \\
+2 & 5.677659 & 5.771371 & 4.56045 & 8.913 & 100.5934 \\
+3 & 5.722809 & 5.790001	& 4.553645 & 8.908 & 101.1012 \\
+4 & 5.721358 & 5.795148 & 4.561694 & 9.112 & 100.9822 \\
+5 & 5.716541 & 5.782545 & 4.554886 & 9.024 & 99.5587 \\
+Average & 5.7113684 & 5.7808238 & 4.5569676 & 9.084 & 100.68722 \\ [1ex]
+
+\hline %inserts single line
+
+\end{tabular}
+
+\end{table}
+\begin{table}[ht]
+
+\caption{Dimension: 1024, Generations: 1000 Threads: 2\\Global State at 1000 generations is 44790 alive cells} % title of Table
+
+\centering % used for centering table
+
+\begin{tabular}{c c c c c c} % centered columns (4 columns)
+
+\hline\hline %inserts double horizontal lines
+
+Test & C++ 11 & C++ Boost & C OpenMP & Java & Go \\ [0.5ex] % inserts table 
+
+%heading
+
+\hline % inserts single horizontal line
+
+1 & 3.047201 & 3.114075 & 2.353971 & 4.714 & 74.8022 \\
+2 & 3.043579 & 3.116941 & 2.355625 & 4.568 & 72.2883 \\
+3 & 3.04981 & 3.127248 & 2.356607 & 4.736 & 71.0558 \\
+4 & 3.055256 & 3.118521 & 2.356541 & 4.68 & 75.5541 \\
+5 & 3.050681 & 3.130182 & 2.359814 & 4.694 & 70.5531 \\
+Average & 3.0493054 & 3.1213934 & 2.3565116 & 4.6784 & 72.8507 \\
+Speed Up & 1.8730063574 & 1.8520010326 & 1.933776859 & 1.9416894665 & 1.3821036723 \\ [1ex]
+
+
+\hline %inserts single line
+
+\end{tabular}
+
+\end{table}
+\begin{table}[ht]
+
+\caption{Dimension: 1024, Generations: 1000 Threads: 2\\Global State at 1000 generations is 44790 alive cells} % title of Table
+
+\centering % used for centering table
+
+\begin{tabular}{c c c c c c} % centered columns (4 columns)
+
+\hline\hline %inserts double horizontal lines
+
+Test & C++ 11 & C++ Boost & C OpenMP & Java & Go \\ [0.5ex] % inserts table 
+
+%heading
+
+\hline % inserts single horizontal line
+
+1 & 2.200051 & 2.181026 & 1.328827 & 3.867 & 95.5914 \\
+2 & 2.144076 & 2.077911 & 1.422537 & 3.881 & 95.0917 \\
+3 & 2.092156 & 2.096594 & 1.401127 & 3.94 & 94.5871 \\
+4 & 2.083783 & 2.098059 & 1.474601 & 3.879 & 94.9951 \\
+5 & 2.087061 & 2.102909 & 1.404484 & 3.881 & 95.2215 \\
+Average & 2.1214254	2.1112998	1.4063152	3.8896	95.09736
+Speed Up & 2.6922315534	2.7380402347	3.2403600558	2.335458659	1.058780391
+
+2 & 
+3 & 
+4 & 
+5 & 
+Average & 
+Speed Up & 
+
+
+\hline %inserts single line
+
+\end{tabular}
+
+\end{table}
 \subsection{Valgrind output}
 \includegraphics[scale=0.5]{valgrind1.png}\\
 \includegraphics[scale=0.5]{valgrind2.png}

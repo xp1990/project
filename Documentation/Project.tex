@@ -68,9 +68,18 @@
 \lhead{}\chead{}\rhead{}
 \lfoot{}\cfoot{\thepage}\rfoot{}
 
-\usepackage[xindy]{glossaries}
-\include{glossary}
+\newcommand*{\glossfirstformat}[1]{\textbf{#1}}
+
+\usepackage[nonumberlist]{glossaries}
+\glossarystyle{altlist}
+\renewcommand*{\glspostdescription}{}
 \makeglossaries
+
+\renewcommand{\glsdisplayfirst}[4]{\glossfirstformat{#1#4}}
+\renewcommand*{\glsnamefont}{\sffamily}
+\renewcommand*{\glossarymark}[1]{}
+
+\input{glossary}
 
 %%% SECTION TITLE APPEARANCE
 \usepackage{sectsty}
@@ -88,6 +97,7 @@
 %\usepackage{pdftex}
 %\date{} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
+\pagestyle{fancy} 
 
 \begin{document}
 
@@ -118,42 +128,75 @@ Colin \textsc{Egan} \\
 
 \pagebreak
 \tableofcontents
+\pagebreak
 \section{Abstract}
 \section{Acknowledgements}
+Colin Egan - For all his help and support in making this project.
 \section{Introduction}
 With such a large number of choices open to programmers in the context of multi-core programming and writing concurrent code there is no wonder that it can be a bit of a minefield getting started. This investigation is aimed at providing an insight into the relevant features and facilities of popular (and not so popular) multi-threading solutions. Whilst also aiming to provide details of some of the quirks and eccentricities encountered during parallel program design and implementation.
 
 The scope of this project includes a discussion of the procedures involved in designing and implementing parallel code, and the generic features of multi-thread capable libraries. A walk-through of the different code implementations and an analysis based on the {\bf core values} outlined later in this section. It is a concious decision to leave an in-depth discussion about different compilers and interpreters out of this report.
 %Using Conway's Game of Life as a conduit to e set AFTER setting up the page geometry
-\pagestyle{fancy} % options: empty , pexplore the facilities and functionality of different multi-threading libraries and languages, I will compare and contrast the different implementations I produce to investigate their overall appropriateness for simple parallel programs.
+% options: empty , pexplore the facilities and functionality of different multi-threading libraries and languages, I will compare and contrast the different implementations I produce to investigate their overall appropriateness for simple parallel programs.
 %Why Conway's Game of Life? 
 \subsection{Motivation}
 Designing parallel code, especially for a beginner, is an activity filled with difficult decisions about how to proceed. At every point in the development cycle the stakes are high, and the overall success of the application depends heavily on decisions made during the design and implementation stage. Most importantly, I believe the likelihood of producing a successful parallel application relies on the decision of what multi-threaded language or library to use. The motivation for this project resides my belief that there is a need for a concise resource that contrasts and compares the benefits and pitfalls of popular multi-threading packages for a parallel problem which is simple and common.
 \subsection{Aim}
 To compare and contrast multi-threading languages and libraries using Conway's Game of Life as an example of language facilities and features. The overall analysis of a particular implementation will be based around {\bf core values}. The successful satisfaction of these will lead to a conclusion based around the suitability of a particular model for a simple parallel problem. Whilst also conducting an investigation into the process of creating parallel code and the obstacles and challenges that come with it.
-\subsection{Objectives}
-\begin{itemize}
-\item Provide a commentary on prototype and relevant research undertaken
+\subsection*{Objectives}
+\newcounter{saveenum}
+\begin{enumerate}
+\item Provide a commentary on prototype and research undertaken
 \item Investigate and document the steps leading to the creation of a parallel algorithm.
 \item Produce code implementations of the Game of Life in various multi-threading packages
 \item Produce an analysis using quantitative and qualitative methods
-\end{itemize}
+\setcounter{saveenum}{\value{enumi}}
+\end{enumerate}
+\subsection*{Advanced Objectives}
+\begin{enumerate}
+\setcounter{enumi}{\value{saveenum}}
+\item Graphical output in real-time.
+\item A functional model using either SaC or Haskell
+\item Apply Amdahl's Law to gain a figure for calculated speed up.
+\end{enumerate}
+\subsection{Achievements}
+\begin{table}[h]
+\centering
+\begin{tabular}{|r|l|}
+\hline {\bf Objective} & {\bf Status} \\ 
+\hline 1 &  Completed\\ 
+\hline 2 &  Completed\\ 
+\hline 3 &  Completed\\ 
+\hline 4 &  Completed\\ 
+\hline 
+\hline 5 &  Completed\\ 
+\hline 6 &  Started \\ 
+\hline 7 &  Completed\\ 
+\hline 
+\end{tabular} 
+\end{table}
 \subsection{Core Values}
 \begin{itemize}
 \item {\bf Efficiency} A parallel program must run quickly and make good use of processing resources, that's the whole point! Efficiency will not only examine the speed of an implementation with respect to other implementations but also the overall speed-up, the overheads associated with using certain package directives to make code run correctly, the organisation of the code and how a different structure might perform more quickly or slowly, how compiler optimisation (if it's available) effects performance, and any other issues that present themselves.
-%\subitem Concurrent applications must run quickly and make good use of processing resources. With regard to a concurrent algorithm, efficiency will examine the overhead computations that must be added to ensure a correct execution, how alternative arrangements of threads or organizations of tasks might work better or worse, and what other problems there could be with the performance of the threaded application.
 \item {\bf Simplicity} A simple algorithm is one that is easy to develop, debug, verify, maintain and extend. This value will investigate how much code has had to be added to ensure proper parallel execution over the sequential version. Also, how much of the initial code structure remains? 
-%\subitem The simpler a concurrent algorithm is, the easier it will be to develop, debug, verify, and maintain. In terms of concurrent code based on a serial version, discussions of simplicity will focus on how much extra code you have to add to achieve a concurrent solution and how much of the original structure of the serial algorithm remains.
-\item {\bf Portability} How easy is it to move from one model to another? Using C code as a base, how hard is it to re-use existing algorithms and create a second implementation. Do the multi-threading directives translate easily? The degree to which a algorithm is ambiguous with another will describe how portable it is in that context.
-%\subitem Portability discussions will examine the tradeoffs that could encountered if you used a different threading model from the implemented design. While this book is primarily dedicated to the design and exploration of multithreaded codes, one of the options discussed under portability will be distributed-memory variations of the algorithms.
+\item {\bf Portability} How easy is it to move from one model to another? How hard is it to re-use existing algorithms and create a second implementation even when there is a different threading model? Do the multi-threading directives translate easily? The degree to which a algorithm is ambiguous with another will describe how portable it is in that context. How flexible is the library or language to different threading paradigms. 
 \item {\bf Scalability} Technology is evolving, the number of processors in computers is only going to increase in the future. How scalable is the code produced? Does the addition of more threads provide a continual speed-up in line with the number of independent processors on a machine? If the size of the data set increases what's the overall effect on the programs execution? The degree to which an implementation can maintain a speed-up with the addition of increasing resources or workload will describe its scalability.
-%\subitem Because the number of cores will only increase as time passes, your concurrent applications should be effective on a wide range of numbers of threads and cores, and sizes of data sets. Scalability refers to what you should expect with regard to how a given concurrent algorithm will behave with changes in the number of cores or size of data sets.
 \end{itemize}
 \subsection{Required Knowledge}
+It is expected that the reader has a background in programming, it is not necessary that this background be in the languages discussed in the report. Part of the report is focused around providing a commentary to parallel program design and whilst a knowledge of parallel programming is useful, it is not necessary. A definition of terms can be obtained in the glossary if any definitions are required that aren't provided in the report.
 \subsection{Project Scope}
-%Maybe just use the introduction to explain this?
+I am to provide a in depth study on parallel program design, threading, language constructs and efficiency. Things like the action of compilers or the internal representation of threads are out of scope, and whilst they may be mentioned, it will not be in any great detail.
 \subsection{Project Structure}
-The investigation begins with an in-depth discussion of cellular automata, in particular Conway's Game of Life. This is succeeded by a look at some of the main algorithms that make the game work, in sequential C. 
+\begin{itemize}
+\item An in-depth discussion of cellular automata, in particular Conway's Game of Life in Chapter 4.1
+\item A look at the sequential algorithm for Conway's Game of Life in chapter 4.2
+\item A discussion of the phases for creating parallel algorithms in chapter 4.2.2.
+\item A discussion on the concept and application of threads in the context of programming languages in chapter 4.3
+\item Chapter 5 chronicles the implementation.
+\item Chapter 6 begins to look at testing and analysing the results
+\item A conclusion based on the findings is in Chapter 7
+\item Chapter 8 consists of the Bibliography and The references. Followed closely by the Appendices and a Glossary of Terms.
+\end{itemize}
 \subsection{Test Setup}
 There is a significant amount of testing that will take place. Throughout the implementation and analysis stage, to test stability, efficiency and scalability.
 \smallskip
@@ -340,7 +383,7 @@ However, in these loops we only care about the cells relating to the global stat
     }
 \end{lstlisting}
 Now that the initial grid is full to the brim, the program can begin processing the next generation by applying the transitional function for Conway's Game of Life. An abstract view of the algorithm is given by {\it figure 6} where the nested nature of the loops and the decisions based around the logic of the transitional function can be seen causing changes in the state of the array for the next generation. It should be fairly obvious to see how the rules listed in {\it figure 6} conform to the rules enumerated in section 3.1. This algorithm is written out in full in {\it listing 4} with the counting of the moore-neighbourhood taking place from line 12 and the application of the transitional function from line 18. Every rule must write something to the appropriate element of the array for the state of the next generation. this can be seen in line 20, a life being written, line 23, a death being written, or line 26, a survival being written. After this it is simply a case of swapping the grid and new\_grid pointers and incrementing the {\it gen} counter. The game will continue until {\it gen} equals MAXGEN. As mentioned earlier the correctness of my results is vital and a function to count the number of alive cells after the game has finished is also in the code base in A.1. This can be compared against other models to ensure correctness. 
-\bigskip\bigskip\bigskip
+
 %\begin{figure}[h]
 \begin{lstlisting}[caption={Processing the Moore-neighbourhood and writing to the next generations global state array}]
 #if USEBOOL == 1
@@ -381,11 +424,7 @@ void process(int **grid_ptr, int **new_grid_ptr)
 \caption{A Level 1 Activity Diagram of the application of the transitional function and rule logic}
 \label{fig: Algo0}
 \end{figure}
-These blocks of code have helped me make some fairly crucial design decisions on my C and C++ versions and to a lesser extent my Java and Python versions. Earlier on I introduced the idea of a preprocessor macro and explained my use of them. This has helped me make two big design decisions. Firstly to use the function {\bf calloc} for allocating my array memory, and secondly to use the {\bf bool} import and data-type for the element attributes.
-\begin{itemize}
-\item {\bf Calloc} was chosen because, on a whim, I tried to validate the correctness of my code using two different programs for runtime analysis. {\bf Valgrind} and {\bf GProf}. Both programs reported runtime errors relating to the memory structures, during any type of access to my arrays. Evidence of the errors is in appendix A.3. Malloc seemed to be leaking and causing a large number of errors. One of which broke Linux indefinitely! After switching to calloc I had no such errors and the program ran correctly. Interestingly enough the results recorded from both the malloc version and the calloc version were the same the only difference was the memory leak. This error was still present even if the arrays were freed using the {\bf free(void*)} function.
-\item The {\bf bool} library was chosen because, apart from being the obvious choice, in that each cell in the automaton has only two states, alive or dead; but because it was 3\% faster in testing, consistently. My initial logic was that fetching a boolean value from memory, with a size of 1 byte, compared to a 4-byte integer, means that the boolean saves on clock cycles as it uses less bandwidth (however this depends on the size of the buses involved in each area of the execution pipeline; I'm assuming a 64-bit bus width and word size considering my architecture). At least that is what I thought. I did some research into how the assembler treats the use of bool versus an int and I produced a piece of code that attempts to perform an if-statement on a bool and an int. Then made the compiler produce the assembly code for an optimised version(it's easier to read than unoptimised assembly). The code tells us that the only difference between both functions f() and g() is the {\it cmpl} and {\it cmpb} assembly respectively. There is no difference between the function of these calls other than one only expects a byte as an argument {\it cmpb}(compare byte) and the other is a simple logical compare. Knowing this I tried to find out what values were passed into the registers and in a x86-64 architecture the whole of the general purpose register has to be used so the boolean value will be padded to fit in the GPR. So where do the performance benefits come from? This can be seen in the appendix A.4.
-\end{itemize}
+These blocks of code have helped me make some fairly crucial design decisions on my C and C++ versions and to a lesser extent my Java and Python versions. Earlier on I introduced the idea of a preprocessor macro and explained my use of them. This has helped me make two big design decisions. Firstly to use the function {\bf calloc} for allocating my array memory, and secondly to use the {\bf bool} import and data-type for the element attributes. There is a small investigation I have conducted into these choices, but due to length constraints they have been resigned to the appendices A.14, A.15, and A.16. 
 \subsubsection{A Thought Process for Parallelism}
 Why do we make code parallel? So we can increase the speed at which a process or program can execute, of course! There are three main levels of parallelism: {\bf instruction-level parallelism}, {\bf data parallelism}, and {\bf task parallelism}. Where instruction-level parallelism represents instruction pipelining, branch prediction, or super-scalar architectures \cite[Patterson, Hennessy, p41]{ref10}. Task parallelism is the simultaneous processing of different tasks (or processes). Data parallelism, the beast that I am concerned with, is the decomposition of data into smaller blocks so that work can be carried out on them in parallel by separate processing units \cite[Patterson, Hennessy, A-17]{ref10}.
 \bigskip
@@ -540,90 +579,13 @@ In the context of the parallel Game of Life algorithm it is worth noting that th
 
 What would happen if we neglected to synchronise? Well, different things. Firstly both the copying of the ghost cells and the swapping of the pointers should only occur once per cycle. Secondly, these activities are essentially writing to the contents of the array whilst the other threads are waiting to read from it. Without synchronising the threads a {\bf race condition could} occur. A race condition, outlined in the earlier section, is about contention of resources. Where, in a team of threads, one is trying to write, whilst others may be trying to read. The outcome of the read value can never be guaranteed without using synchronisation. In the Game of Life parallel algorithm, this is achieved by using {\bf barrier} objects to alter the flow of control in the algorithm it is explained in-depth in the OpenMP implementation.
 
-Another possible consequence of not synchronising is the {\bf consumer-producer} problem. However, during the design stage of the Game of Life parallel algorithm this outcome was made impossible by the choice of data structure. Nevertheless I will explain it with a relevant example; Imagine a dynamic workload scheduling structure for the Game of Life's parallel algorithm.\cite[p10]{ref13}
+Another possible consequence of not synchronising is the {\bf consumer-producer} problem. However, during the design stage of the Game of Life parallel algorithm this outcome was made impossible by the choice of data structure. Nevertheless I have created an example that will explain the problem in more depth using a dynamic work allocation algorithm. \cite[p10]{ref13} This is explained in the appendices A.17.
 \smallskip
 \begin{mdframed}
 {\bf Note Box: } This technique could be described as fine-grained. As the size of an individual datum that could be mapped to a computational unit is the smallest possible. One cell. As discussed earlier, the flexibility of the algorithm has increased. Also, this implementation would make a great starting point to implement a work stealing version of the algorithm. However, the algorithm now has more significant overheads involved with scheduling and synchronising the work. Is it worth it?
 \end{mdframed}
 \smallskip
-{\it X} threads working on calculating the moore-neighbourhood where there is one producer and more than one consumer. The consumer waits for data to be put in its queue by the producer.  The producer waits for consumers to have room in their data structures for its data. The producer in this example would be the main thread and could operate on a system where, as soon as relevant cells have been copied during the ghost cell phase, begin dispatching work.
-\begin{lstlisting}[language=C, caption={Dynamic Work allocation pseudo-code for the Game of Life}]
-struct queueItem
-{
-    int x, int y;
-}
-
-
-calcMoore(queueItem *, grid *, new\_grid *)
-{
-    //read neighbour data from grid pointer
-    //apply rule and write result to new\_grid pointer
-}
-
-consume()
-{
-    if(queue.size() == 0)
-    {
-        wait();
-    }
-    
-    calcMoore(queue.getTop())
-    
-    queue.pop()
-}
-
-produce()
-{
-    if(queue.size() == MAXSIZE)
-    {
-        wait();
-    }
-    queue.push(queueItem *);
-}
-\end{lstlisting}
-The consumer/producer scenario requires a lot of synchronisation to run smoothly and there are many issues that can arise from using it. Consider line 15 and line 27 of {\it listing 8}. What if the consumer makes the call to check the size of the queue, but before the comparison can be made the producer has put work in the queue? The program has just generated a race condition. The consumer thread will continue to wait and, because it hasn't realised the work in its queue, will remain in wait. In the meantime the producer thread will continue to add items to the consumer queue until it is full and then end up in a state of wait as well. The solution to this would be to use mutual exclusion on any thread requesting the size of the queue. However this still isn't enough, if a thread does end up in waiting then the other must communicate to it via a {\bf notify()} function, or similar, that it should wake up and check its queue for work.\cite[p18]{ref14}
-
 The downside of using synchronisation objects is the overheads created by their use. Extra memory space allocated for locks, extra functions calls for use and destruction, extra time acquiring and releasing locks. Not only that but if implemented incorrectly they can cause blocks and locks of their own. \cite[Granularity]{ref15}
-
-%\item Von Neumann architecture
-%\subitem Von Neumann bottleneck?
-%\item Harvard Architecture
-%\subitem differences? Bottlnecks?
-%\item Sequential vs. Threaded
-%\item Common issues: Consumer-Producer, Cooperation, Race condition, dead lock, live lock.
-%\item What would happen if we didn't have the synchronisation directives in the code?
-%\item System kernel? How this effects the handling of threads.
-%\item Introduction to packages/languages that will be used.
-%\subitem Briefly explain the differences, look (very quickly) at some syntax.
-%\item sleep why is this bad?
-%\item thread states. ready. executing. dead. etc... HOW THE SYSTEM HANDLES THEM!
-%\subitem how does (generically) a language interface with a systems threads?
-%\subitem how does join work?!
-%\item more needs to be here!
-
-%\section{Languages, Compilers, and Interpreters}
-
-
-%skip this!?!?!?!?! DEFINITELY!
-
-%\item OpenMP and Boost and the appropriateness for different programming paradigms. Look into c++11!!!
-%\item Interesting point: TeX the package used to create documents is a form of compilation.
-%\item Introduce the languages more formally.
-%\subitem Is history necessary here? Java history is quite interesting. 
-%\subitem C99 not supported in windows. Worth mentioning?
-%\subitem Language type (Functional, procedural/imperative, OO)
-%\subitem Language features (typing, inheritance, classes, shared objects, evaluation, verbosity)
-%\item Explain the difference between a compiler and an interpreter (don't forget JIT). 
-%\subitem Maybe do this during the language introduction? 
-%\subitem Highlight which language uses which.
-%\subitem Mention optimisation, take a quick look at some of the C features that offer this (even the deprecated ones: register etc...)
-%\subitem how do interpreters handle optimisation?
-%\subitem how can they ever keep up with compiled languages?
-%\item Recommendations based on research
-%\subitem Is there one language that offers everything?
-%\subitem Could a desirable feature be made available to another language/library at little cost?
-%\item Requirements elicitation? (It has to go somewhere!)
-
 \section{Implementation}
 The languages I'm going to look at have been picked to highlight the fundamental differences in parallel design and threading library functionality and facilities. 
 \begin{itemize}
@@ -960,12 +922,18 @@ Every language was tested using 1, 2, and 4 threads using either 1024 or 2048 di
 \item Build grid of specified size using {\bf buildArray.c} to generate *.dat file
 \item Run the Python Game of Life, GoL.py, to assertain correct number of ``alive'' cells after X number of iterations.
 \end{itemize}
+\begin{mdframed}
 {\bf A note about the results:} Even though some of the code implementations have preprocessor flags defined for conditional compilation of different global state types or use of malloc or calloc, all of the testing was done using calloc and boolean typed arrays, where appropriate. The Java timing system would only allow output to 3 decimal places whereas Go allowed 4 and C or C++ used the {\bf -lrt}, librealtime library, which allowed 6. The results are all recorded in the raw format received from the timing systems. It should be noted that timing, infact any type of runtime profiling, creates an overhead so this is never going to represent the exact figure for an execution. Different timing packages may have different overheads. This is an area which could warrant investigation however it is out of scope of my investigation.
+\end{mdframed}
 \subsection{Results}
+The full listing of results is available in the appendices A.10 - A.13. As a general rule increasing the size of the grid made the execution time 4 times as long, with the noted exception of Java which fell a little bit below this at 3.91 times slower on a 2048 size grid. Increasing the number of generations increased the execution time by around 8 or 9 times. This is consistent with all the languages. It is contrary to my expectation that a 10 times increase in the number of generations would show at least a 10 times increase in processing time. My prediction is based on the fact that each thread has 10 times the work to do and still has all of the synchronisation associated with threading. I cannot elaborate on a theory as to why the measured increase in execution time was 8 - 9 times greater and not 10 or over. The results get interesting when analysing the effect of increasing threads on execution time. Considering the results and the theory work conducted into Amdahl's Law {\it figure 11} it can be seen that there is a definite hierarchy in terms of languages which conform to the speed up predictions of Amdahl's Law.
 
-\begin{figure}[h]
+{\it Figure 12.a} shows the measured speed up of the different implementations on a 2048 grid with 1000 generations processed. Also plotted a line depicting the calculated speed up from the application of Amdahl's Law. This further backs up the calculated value for {\bf P}, the proportion of code that can be improved, as the OpenMP line is so closely related to the calculations plot. Bearing in mind that the calculated speed up was based on a sequential C version, it is also visible that the short falls of C++ and Java on 4 threads in comparison to the efficiency and performance of the C and OpenMP version. C++11, Boost and Java maintain a relatively high speed up after the use of 2 threads, however this falls away after using 4 threads. It is a testament to the high level of scalability and efficiency that C and OpenMP offer. {\bf Figure 12.b} shows a relative comparison of timing over 4 of the implementations. Java is by far the slowest, this is a symptom of the JIT/JRE environment which the language offers. With increased portability comes decreased performance. Java offers no features for optimisation and whilst it is still a compiled language to some extend the JIT compiler for the produced bytecode class files lets it down. C++11 and C++ Boost perform very similarly over the entire course of the testing. However close analysis of the results show that C++ 11 maintains a small, albeit constant, advantage. This could be due to the parallel design model I used. Delegation of the function that applies the transitional function removes the overheads associated with object creation that the Boost implementation will suffer from. 
+
+Go, to a large extent, has been left out of the testing process. After initial results proved extremely poor in comparison to the other implementations. Go is a language very much in its infancy. The runtime system, rather than creating new threads which act as independent conduits for the execution of processors, maps the goroutines to OS threads. This is done to prevent blocking in certain situations. However, it should be noted that there is temporary functionality included in Go at the current time which allows it to map more goroutines to more OS threads. This function GOMAXPROCS, which can be seen on A.8 line 43, allows the Go runtime scheduler to map more goroutines to OS threads and thus more multi-core processing units. The functionality is going to be short lived as the development team have cited the runtime scheduler as a component that will be changed drastically. 
+\begin{figure}[]
 \centering
-\begin{subfigure}[b]{0.8\textwidth}
+\begin{subfigure}[b]{1\textwidth}
 \centering
 \includegraphics[width=\textwidth]{measuredSpeedup2048.png}
 \caption{The Measured Speed Up across all implementations on 2048 size grid}
@@ -982,41 +950,49 @@ Every language was tested using 1, 2, and 4 threads using either 1024 or 2048 di
 \caption{Graphs showing measured speed up and measured timing of implmentations processing a 2048 grid, 1000 generations}}
 \end{figure}
 \subsection{Efficiency}
+C is a language which, in this situation, cannot be beaten in its extreme processing efficiency. Performing on average 28\% faster than the C++ implementations and, on average 2 to 3 times faster than Java. The difference is even greater when more threads are used as Java doesn't scale nearly as well as C with OpenMP. 
+
+Java and C++ are Object Oriented languages, the only versions which made significant use of object-oriented design were the C++ Boost and Java implementations. This is mirrored in the results with C++ Boost consistently performing slower, albeit by a small margin, than C++ 11 which used function delegation. The C++ 11 was not a member of any class and was coded in a procedural fashion. Java's poor performance could be attributed to the object oriented nature or the program. Every iteration the runtime system will have to create and then destroy a team of threads. This will have significant overheads compared to languages like OpenMP where threads are maintained throughout the entirety of the parallel region.
 \subsection{Scalability}
+Scalability is another area which highlights the immense power of C and OpenMP. Performing just under the calculated speed up defined by Amdahl's Law. In reality when moving from 1 thread to 2 threads all the languages performed satisfactorily in terms of speed up. Both the C++ implementations trailed just behind C with Java bringing up the rear. The difference was only highlighted when moving from 2 threads to 4 threads. Both the Java and C++ implementations could not maintain the expected speed up and lost out to C. 
+\bigskip
+\begin{mdframed}
+{\bf Efficient use of Resources :} It should be noted that, as much as I endeavoured to measure this facet of my implementations and their executions, I could never obtain a figure that I trusted because of the effect of the overheads associated with measuring this property. Due to this no formal notes have been taken on the subject. The only figures I have are observed form watching system monitors and the processor's utilisation graph. C and OpenMP, under all loads and settings consistently used between 95-100\% of the CPU. C++ used around 90\% - 70\% dependant on number of threads invoked. Java was the lowest with around 60\% for all settings. However, these figures are a guide and are only included for as a personal observation.
+\end{mdframed}
 \subsection{Simplicity}
+Each language had benefits and pitfalls in this area, thus it is hard to define a whether any particular implementation excelled:
+\begin{itemize}
+\item {\bf OpenMP} - The use of OMP directives and the mental process involved with creating code inside a parallel region seemed natural and development was quick and easy. Producing the code was simple and fluid, even using the synchronising directives and defining code to run sequentially inside a parallel region. The downsides; implicit threading languages have far less control than explicit ones. The lack of control makes debugging any error extremely difficult. This is due to the nontransparent nature of some of the directives, and in some cases the lack of documentation, in particular it took me a while before I realised there was an implicit barrier at the end of a {\bf single} directive.
+\item {\bf Java} - Inheriting the functionality from a class and implementing the run method is a simple, straight-forward, well-defined design paradigm. It makes creating a thread, and defining behaviour easy and fast. However, in comparison to a method of function delegation, inheriting from a thread class may seem like overkill and a bit restrictive. Consider the scenario where a programmer simply wants one thread to perform one small, pred-defined function, repetitively. Creating a thread, an object, then calling start, is a very verbose way of doing this. Especially when languages like Go let the programmer simply call the function with the Go keyword infront of it.  
+\item {\bf Boost Library}  - Good, detailed documentation and very easy to use, even though it works on a function delegation basis, my particular implementation encapsulated a lot of the threads functionality and made the design similar to that of Java. Even though this paradigm was used the implementation retained its ability to be used in an explicit, function delegation manner.
+\item {\bf C++ 11} - Much newer than the Boost library, so naturally there is less documentation available. However, of what there was, it was simple, generic and easy to understand. This is not a ground-breaking library, apart from its ability to simplify threaded C++ code between Windows and Unix, it lacks the uniqueness to set it apart from other implementations. This is not a bad thing, as I got the impression that, ``it just works'' is a core philosophy. The implementation on the other hand did take a bit longer to produce. The method of creating a stand-alone function, that could be passed to a thread creation statement as a function pointer, took longer than expected.
+\item {\bf Go} - Whilst extremely disappointing performance-wise, this language was a dream to code in. The dynamic {\it feel} of the language made creating code simple and easy, I didn't have to think to deeply about anything I produced, and the flexibility due to the lack of a type hierarchy made managing the global state data structures easy and fast. If I wanted a function to do something, I could create it, easily, quickly, and it worked. The process of explicit threading and function delegation still applies yet it was possible by just adding the keyword {\bf go} in front of a function call. 
+\end{itemize}
 \subsection{Portability}
-
-% In OpenMP I defined a {\bf parallel region}, in Java I created a class that {\bf inherited} thread functionality. In PThreads, Boost, and C++11 threads, the creation of a thread depends on the address of an expected parameter, a callable function.
-
-%Head sub sections with each core value and talk about each language for at most 2 - 3 lines.
-
-%OMP - horrible to debug, evidenced by for loop producing incorrect results. symptom of implicit threading
-
-%\subsection{Problems}
-%
-%%\item Should this really be here? It should really be rounded up in each subheading...
-%%\item Optimisations compiler results mess up
-%%\item Functional model learning curve and paradigm shift. 
-%%\item Python - Using functional techniques.
-%
-%\subsection{Syntax and Semantics}
-%\subsection{Ease of use}
-%\subsection{Features}
-%\subsection{Performance}
-%\subsection{Extensions}
-
-%\item Using OOP to recognize patterns and predict movement. I.e. Gliders and inverters.
-
+In OpenMP the programmer is constrained by implicit threading and having to use parallel regions. In Java, the programmer is constrained by the class inheritance model. Having to create thread objects and define functionality native to a thread class. In both of these implementations there is no way to simply delegate a function to a thread, nor have the flexibility to chose more than one parallel design structure. The example I produced with C++ Boost and Threads is th most most portable language in this situation. It has the ability to create parallel solutions using a class system, where a class can encapsulate the thread and its behaviour, shown in the Boost library implementation. It also has a high level of control and explicit threading facilities, this is shown in the C++ 11 implementation, by the use of simple function declaration that doesn't require the function to be a member of any class. This makes C++ very compatible with parallel solutions that come from any background. It has the flexibility to offer a package that supports a range of parallel programming paradigms.
 \section{Conclusion}
-%learning outcome
+I have provided a qualitative and quantitative analysis of the produced implementations. Based on my findings I was hoping to form a conclusion based around the best language or library for a simple parallel problem. However I feel the results offer a more complex answer.
+
+C with OpenMP has proved to be the most efficient and simple to code in. The unique facility of a parallel region makes producing parallel code simple and fast. However it is not very portable, any code created in this paradigm will suffer from being tied to one implementation. It also suffers from being terrible to debug, a symptom of the implicit threading paradigm.
+
+C++ on the other hand also offers fast and efficient performance only slightly slower than C, and also a more generic programming interface, with the newly released C++ 11, Boost, and object-oriented design. It truly is a powerful, and portable language.
+
+I was very impressed with Go. It was extremely easy to use, and the flexibility offered by the dynamic features makes creating code very fast and simple. The lack of a type hierarchy made having access to data simple and the creation of a goroutine was easy and concise. It's a shame about the performance and I can only hope that it gets better with newer releases.
+
+The overall answer is, don't use Java. It is restrictive, and verbose, it doesn't scale well, and is slow. For performance, the overheads associated with object-oriented design and the JIT compilation system do not create a useful parallel programming environment. 
+
 %Some sort of choice based on the most appropriate language.
+\section*{Reflection}
+I have learnt a vast amount about creating concurrent components, parallel processing and the languages and libraries required to implement them. Planning this project has been key to its success. I have used Git exclusively and there are commit logs and data included in the appendices.
+
+I could improve on
+%GIT, Problems, 
+\section*{Extensions and Future Investigations}
 \section{Bibliography}
 %Both compiler books!!
 \nocite{*}
 \bibliographystyle{unsrt}
 \bibliography{Project.bib}
-\glsaddall
-\printglossaries
 \pagebreak
 \appendix
 \pagebreak
@@ -1134,7 +1110,7 @@ Index by function name
 
 \end{verbatim}
 \endgroup
-\subsection{Test Results}
+\subsection*{Test Results}
 \subsection{1024 Grid 1000 Generations}
 \begin{table}[ht]
 
@@ -1496,5 +1472,13 @@ Speed Up & 2.9611924974 & 2.9427808685 & 3.7339972943 & 2.7009084907 \\ [1ex]
 \lstinputlisting[language=C]{../Sequential/boolInt.c}
 \lstinputlisting[language={[x86masm]Assembler}]
 {../Sequential/boolInt.s}
+\subsection{Bool and Calloc Discussion}
+\input{callocbool}
 \pagebreak
+\subsection{Consumer/Producer and Dynamic Work Allocation Discussion}
+\input{dynamic}
+\pagebreak
+\section{Glossary}
+%\glossary{glossary}
+\printglossaries
 \end{document}

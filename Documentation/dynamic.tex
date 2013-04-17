@@ -1,0 +1,36 @@
+Imagine a dynamic workload scheduling structure for the Game of Life's parallel algorithm.{\it X} threads working on calculating the moore-neighbourhood where there is one producer and more than one consumer. The consumer waits for data to be put in its queue by the producer.  The producer waits for consumers to have room in their data structures for its data. The producer in this example would be the main thread and could operate on a system where, as soon as relevant cells have been copied during the ghost cell phase, begin dispatching work.
+\begin{lstlisting}[language=C, caption={Dynamic Work allocation pseudo-code for the Game of Life}]
+struct queueItem
+{
+    int x, int y;
+}
+
+
+calcMoore(queueItem *, grid *, new\_grid *)
+{
+    //read neighbour data from grid pointer
+    //apply rule and write result to new\_grid pointer
+}
+
+consume()
+{
+    if(queue.size() == 0)
+    {
+        wait();
+    }
+    
+    calcMoore(queue.getTop())
+    
+    queue.pop()
+}
+
+produce()
+{
+    if(queue.size() == MAXSIZE)
+    {
+        wait();
+    }
+    queue.push(queueItem *);
+}
+\end{lstlisting}
+The consumer/producer scenario requires a lot of synchronisation to run smoothly and there are many issues that can arise from using it. Consider line 15 and line 27 of {\it listing 8}. What if the consumer makes the call to check the size of the queue, but before the comparison can be made the producer has put work in the queue? The program has just generated a race condition. The consumer thread will continue to wait and, because it hasn't realised the work in its queue, will remain in wait. In the meantime the producer thread will continue to add items to the consumer queue until it is full and then end up in a state of wait as well. The solution to this would be to use mutual exclusion on any thread requesting the size of the queue. However this still isn't enough, if a thread does end up in waiting then the other must communicate to it via a {\bf notify()} function, or similar, that it should wake up and check its queue for work.\cite[p18]{ref14}

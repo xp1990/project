@@ -7,16 +7,16 @@
 #include <stdbool.h>
 
 
-#define MAXGEN 1000 //number of generations to process
-#define DIM 1024 //dimension of the grid
+#define MAXGEN 10000 //number of generations to process
+#define DIM 2048 //dimension of the grid
 #define LIFE 3 //probability of life if random generation is used
 #define BOOL 1 //use bool for arrays, if not use int.
 #define SEED 2012 //seed for random life generation
-#define THREADS 8 //number of threads to create for parallel region
+#define THREADS 4 //number of threads to create for parallel region
 #define SHARED 1 //shared or local memory implementation
 #define INLINE 1 //use inline functions 
 #define REGISTER 0 //instruct compiler to store global state arrays in registers
-#define FILENAME "1024.dat" //filename to read from
+#define FILENAME "2048.dat" //filename to read from
 
 //var for time measurement
 struct timespec begin, end; 

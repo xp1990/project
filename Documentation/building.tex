@@ -1,0 +1,34 @@
+\begin{itemize}
+\item OpenMP Compiler Instruction:
+\begin{verbatim}
+gcc edgol.c -fopenmp -lrt -O3 
+./a.out
+\end{verbatim}
+\item Boost Compiler Instruction:
+\begin{verbatim}
+g++ Thread.cpp -lboost_thread -lrt -O3
+./a.out
+\end{verbatim}
+\item C++ 11 Compiler Instruction:
+\begin{verbatim}
+g++ ThreadC11.cpp -std=c++11 -lrt -O3
+./a.out
+\end{verbatim}
+\item Python Instruction. Ctrl + C to end GUI simulation:
+\begin{verbatim}
+python GoL.py
+\end{verbatim}
+\item Java Instruction:
+\begin{verbatim}
+javac GoL.java
+java GoL
+\end{verbatim}
+\item Go Instruction:
+\begin{verbatim} 
+gccgo GoL.go -O3
+./a.out
+-OR-
+Go run GoL.go
+\end{verbatim} 
+\end{itemize}
+To control the number of threads used in execution find the {\bf THREADS} or {\bf threads} line in the source code. It will exist as either a private static final int in Java or a preprocessor macro in C/C++ and a var in Go.
